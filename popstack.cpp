@@ -5,6 +5,9 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
+#include <cpprest/http_client.h>
+#include <cpprest/json.h>
+
 int main() {
     //TODO
 

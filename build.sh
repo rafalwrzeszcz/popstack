@@ -5,4 +5,14 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
-g++ popstack.cpp -o popstack
+g++ popstack.cpp \
+    -Wall \
+    -O3 \
+    -std=c++11 \
+    -o popstack \
+    -Ivendor/casablanca/Release/include \
+    -Lvendor/casablanca/Release/build/Binaries \
+    -lcpprest \
+    -lboost_system \
+    -lssl \
+    -lcrypto
