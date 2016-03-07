@@ -1,0 +1,3 @@
+[submodule "vendor/casablanca"]
+	path = vendor/casablanca
+	url = https://github.com/Microsoft/cpprestsdk.git
