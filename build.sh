@@ -14,5 +14,6 @@ g++ popstack.cpp \
     -Lvendor/casablanca/Release/build/Binaries \
     -lcpprest \
     -lboost_system \
+    -lboost_iostreams \
     -lssl \
     -lcrypto
