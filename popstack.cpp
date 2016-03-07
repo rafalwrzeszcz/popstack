@@ -13,6 +13,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/regex.hpp>
 
 #include <cpprest/http_client.h>
 #include <cpprest/http_msg.h>
@@ -29,6 +30,10 @@ using boost::iostreams::array_source;
 using boost::iostreams::copy;
 using boost::iostreams::filtering_istream;
 using boost::iostreams::gzip_decompressor;
+using boost::match_results;
+using boost::regex;
+using boost::regex_search;
+using boost::smatch;
 
 using pplx::task;
 using web::http::methods;
@@ -37,11 +42,24 @@ using web::http::client::http_client;
 using web::json::array;
 using web::json::value;
 
-int main() {
-    //TODO: pick query from command line
+/* TODO
+ * build tool
+ * dependency management
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features (like overloaded operators)
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects)
+ */
 
-    http_client client("http://api.stackexchange.com/2.2/similar?site=stackoverflow&order=desc&sort=relevance&title=Hibernate%20manytomany");
-    client
+regex snippet("<pre><code>(.*?)</code></pre>");
+
+task< value > fetch(const string call) {
+    http_client client("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow");
+    return client
         .request(methods::GET)
         .then([](http_response response) -> task< vector< unsigned char > > {
                 return response.extract_vector();
@@ -61,18 +79,45 @@ int main() {
         })
         .then([](string content) -> value {
                 return value::parse(content);
-        })
-        .then([](value data) {
+        });
+}
+
+string extractSnippet(string body) {
+    smatch match;
+    if (regex_search(body, match, snippet)) {
+        return match[1];
+        //TODO: trim, unescape
+    }
+
+    return "";
+}
+
+int main() {
+    //TODO: pick query from command line
+
+    string body = fetch("similar?order=desc&sort=relevance&title=Hibernate%20manytomany")
+        .then([](value data) -> string {
                 array items = data.at("items").as_array();
 
                 array::iterator iterator;
                 for (iterator = items.begin(); iterator != items.end(); ++iterator) {
-                    cout << *iterator << endl;
+                    if (iterator->has_field("accepted_answer_id")) {
+                        return fetch("answers/" + iterator->at("accepted_answer_id").serialize() + "?filter=withbody")
+                            .then([](value answer) -> string {
+                                    return answer.at("items").at(0).at("body").as_string();
+                            })
+                            .then(&extractSnippet)
+                            .get();
+                        //TODO: first make sure there was a snippet extracted
+                    }
                 }
 
-                //TODO
+                //TODO; process more pages maybe?
+                return "";
         })
-        .wait();
+        .get();
+
+    cout << body << endl;
 
     return 0;
 }

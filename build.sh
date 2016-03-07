@@ -15,5 +15,6 @@ g++ popstack.cpp \
     -lcpprest \
     -lboost_system \
     -lboost_iostreams \
+    -lboost_regex \
     -lssl \
     -lcrypto
