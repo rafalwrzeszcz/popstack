@@ -9,12 +9,14 @@
 #include <string>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 #include <boost/regex.hpp>
 
+#include <cpprest/base_uri.h>
 #include <cpprest/http_client.h>
 #include <cpprest/http_msg.h>
 #include <cpprest/json.h>
@@ -26,6 +28,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
+using boost::algorithm::join;
 using boost::iostreams::array_source;
 using boost::iostreams::copy;
 using boost::iostreams::filtering_istream;
@@ -41,6 +44,7 @@ using web::http::http_response;
 using web::http::client::http_client;
 using web::json::array;
 using web::json::value;
+using web::uri;
 
 /* TODO
  * build tool
@@ -53,9 +57,10 @@ using web::json::value;
  * use more language features (like overloaded operators)
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
+ * "proper" HTTP client setup (headers, gzip as a middleware)
  */
 
-regex snippet("<pre><code>(.*?)</code></pre>");
+const regex snippet("<pre><code>(.*?)</code></pre>");
 
 task< value > fetch(const string call) {
     http_client client("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow");
@@ -92,10 +97,10 @@ string extractSnippet(string body) {
     return "";
 }
 
-int main() {
-    //TODO: pick query from command line
+int main(int argc, const char* argv[]) {
+    vector< string > arguments(argv + 1, argv + argc);
 
-    string body = fetch("similar?order=desc&sort=relevance&title=Hibernate%20manytomany")
+    string body = fetch("similar?order=desc&sort=relevance&title=" + uri::encode_uri(join(arguments, " ")))
         .then([](value data) -> string {
                 array items = data.at("items").as_array();
 
