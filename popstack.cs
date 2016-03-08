@@ -77,10 +77,12 @@ namespace PopStack
             return "";
         }
 
-        public static void Main()
+        public static void Main(string[] args)
         {
+            string query = String.Join(" ", args);
+
             JArray items = PopStack.ParseResponse(
-                PopStack.MakeRequest("similar?order=desc&sort=relevance&title=" + "Hibernate manytomany")
+                PopStack.MakeRequest("similar?order=desc&sort=relevance&title=" + HttpUtility.UrlEncode(query))
             ).Value<JArray>("items");
             JToken buffer;
             foreach (JToken token in items) {
