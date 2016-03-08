@@ -6,4 +6,5 @@
 ##
 
 mcs popstack.cs \
+    -r:System.Web.dll \
     -r:vendor/Json.NET/Bin/Net45/Newtonsoft.Json.dll
