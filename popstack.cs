@@ -34,6 +34,13 @@ namespace PopStack
             return JObject.Load(new JsonTextReader(new StreamReader(body)));
         }
 
+        public static string ExtractSnippet(string content)
+        {
+            Console.WriteLine(content);
+            //TODO: match, trim, unescape
+            return "";
+        }
+
         public static void Main()
         {
             JArray items = PopStack.ParseResponse(
@@ -42,9 +49,17 @@ namespace PopStack
             JToken buffer;
             foreach (JToken token in items) {
                 JObject item = token as JObject;
-                if( item.TryGetValue("accepted_answer_id", out buffer) ) {
-                    //TODO
+                if (item.TryGetValue("accepted_answer_id", out buffer)) {
+                    String answer = PopStack.ParseResponse(
+                        PopStack.MakeRequest("answers/" + buffer.ToString() + "?filter=withbody")
+                    ).Value<JArray>("items").Value<JObject>(0).GetValue("body").ToString();
+
+                    Console.WriteLine(PopStack.ExtractSnippet(answer));
+
+                    //TODO: first make sure there was a snippet extracted
+                    break;
                 }
+                //TODO; process more pages maybe?
             }
         }
     }
