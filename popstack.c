@@ -13,9 +13,12 @@
 
 #include <glib.h>
 
+#include <jansson.h>
+
 #define BUFFER_SIZE (256 * 1024) /* 256 KB */
 
 /*TODO:
+ * proper handling of memory allocation/freeing
  * build tool
  * dependency management
  * code style
@@ -77,15 +80,48 @@ static char* request(const char* call) {
     return data;
 }
 
-int main(int argc, const char* argv[]) {
-    printf("%s\n", request("similar?order=desc&sort=relevance&title=Hibernate+manytomany"));
-    //TODO: build query from command line args
-    //TODO: url-escape query
-    //TODO: fetch list of questions
-    //TODO: pick one with accepted response
-    //TODO: get accepted answer body
+char* extractSnippet(const char* content) {
     //TODO: extract snippet
     //TODO: print snippet
+    return "";
+}
+
+int main(int argc, const char* argv[]) {
+    //TODO: build query from command line args
+    //TODO: url-escape query
+
+    char* content = request("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+    json_error_t error;
+    json_t* response = json_loads(content, 0, &error);
+    free(content);
+
+    json_t* items = json_object_get(response, "items");
+    int count = json_array_size(items);
+    json_t* answer;
+    for (int i = 0; i < count; ++i) {
+        answer = json_object_get(json_array_get(items, i), "accepted_answer_id");
+
+        if (answer != NULL) {
+            char* url = g_strdup_printf("answers/%d?filter=withbody", (int) json_integer_value(answer));
+            content = request(url);
+            g_free(url);
+
+            answer = json_loads(content, 0, &error);
+            free(content);
+
+            printf(
+                "%s\n",
+                extractSnippet(
+                    json_string_value(json_object_get(json_array_get(json_object_get(response, "items"), 0), "body"))
+                )
+            );
+
+            //TODO: first make sure there was a snippet extracted
+            break;
+        }
+    }
+
+    //TODO; process more pages maybe?
 
     return 0;
 }
