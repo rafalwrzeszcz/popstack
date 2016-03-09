@@ -12,6 +12,8 @@ import "fmt"
 import "html"
 import "io/ioutil"
 import "net/http"
+import "net/url"
+import "os"
 import "regexp"
 import "strconv"
 import "strings"
@@ -56,9 +58,9 @@ func extractSnippet(body string) string {
 }
 
 func main() {
-    //TODO: read query from command line
+    var query string = url.QueryEscape(strings.Join(os.Args[1:], " "))
 
-    var response map[string]interface{} = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")
+    var response map[string]interface{} = fetch("similar?order=desc&sort=relevance&title=" + query)
     var items []interface{} = response["items"].([]interface{})
     var item interface{}
     var data map[string]interface{}
