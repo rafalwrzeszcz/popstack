@@ -9,9 +9,26 @@ package main
 
 import "encoding/json"
 import "fmt"
+import "html"
 import "io/ioutil"
 import "net/http"
+import "regexp"
 import "strconv"
+import "strings"
+
+/* TODO
+ * build tool
+ * dependency management
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects)
+ * "proper" HTTP client setup (headers)
+ */
 
 func parse(content []byte) map[string]interface{} {
     var data map[string]interface{}
@@ -30,12 +47,17 @@ func fetch(call string) map[string]interface{} {
 }
 
 func extractSnippet(body string) string {
-    fmt.Println(body)
-    //TODO: match, extract, unescape, trim
+    snippet := regexp.MustCompile("(?s)<pre><code>(.*?)</code></pre>")
+    if snippet.MatchString(body) {
+        return html.UnescapeString(strings.TrimSpace(snippet.FindStringSubmatch(body)[1]))
+    }
+
     return ""
 }
 
 func main() {
+    //TODO: read query from command line
+
     var response map[string]interface{} = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")
     var items []interface{} = response["items"].([]interface{})
     var item interface{}
