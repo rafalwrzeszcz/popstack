@@ -5,6 +5,7 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,7 @@ typedef struct {
 } write_result;
 
 static GRegex* snippet;
+static CURL* curl;
 
 static size_t write_response(void* ptr, size_t size, size_t nmemb, void* stream) {
     write_result* result = (write_result*) stream;
@@ -48,12 +50,10 @@ static size_t write_response(void* ptr, size_t size, size_t nmemb, void* stream)
     return size * nmemb;
 }
 
-static char* request(const char* call) {
-    CURL* curl = NULL;
+static char* request(const char* call, ...) {
     char* data = NULL;
-
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl = curl_easy_init();
+    va_list args;
+    va_start(args, call);
 
     data = malloc(BUFFER_SIZE);
 
@@ -62,7 +62,10 @@ static char* request(const char* call) {
         .pos = 0
     };
 
-    char* url = g_strconcat("http://api.stackexchange.com/2.2/", call, "&site=stackoverflow", NULL);
+    char* path = g_strdup_vprintf(call, args);
+    char* url = g_strconcat("http://api.stackexchange.com/2.2/", path, "&site=stackoverflow", NULL);
+    g_free(path);
+    va_end(args);
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_response);
@@ -70,9 +73,6 @@ static char* request(const char* call) {
     curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 
     curl_easy_perform(curl);
-
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
 
     g_free(url);
 
@@ -99,24 +99,41 @@ int main(int argc, const char* argv[]) {
     // no need for freeing - will just be user through the lifetime of an app
     snippet = g_regex_new("<pre><code>(.*?)</code></pre>", G_REGEX_DOTALL, 0, NULL);
 
-    //TODO: build query from command line args
-    //TODO: url-escape query
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
 
-    char* content = request("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+    char* parts[argc];
+    int i;
+
+    for (i = 1; i < argc; ++i) {
+        parts[i - 1] = g_strdup(argv[i]);
+    }
+    parts[argc - 1] = NULL;
+    char* query = g_strjoinv(" ", parts);
+
+    // free temporary copies
+    for (i = 1; i < argc; ++i) {
+        g_free(parts[i - 1]);
+    }
+
+    char* escaped = curl_easy_escape(curl, query, 0);
+    g_free(query);
+
+    char* content = request("similar?order=desc&sort=relevance&title=%s", escaped);
+
     json_error_t error;
     json_t* response = json_loads(content, 0, &error);
     free(content);
+    curl_free(escaped);
 
     json_t* items = json_object_get(response, "items");
     int count = json_array_size(items);
     json_t* answer;
-    for (int i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         answer = json_object_get(json_array_get(items, i), "accepted_answer_id");
 
         if (answer != NULL) {
-            char* url = g_strdup_printf("answers/%d?filter=withbody", (int) json_integer_value(answer));
-            content = request(url);
-            g_free(url);
+            content = request("answers/%d?filter=withbody", (int) json_integer_value(answer));
 
             answer = json_loads(content, 0, &error);
             free(content);
@@ -124,7 +141,7 @@ int main(int argc, const char* argv[]) {
             printf(
                 "%s\n",
                 extractSnippet(
-                    json_string_value(json_object_get(json_array_get(json_object_get(response, "items"), 0), "body"))
+                    json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
                 )
             );
 
@@ -134,6 +151,9 @@ int main(int argc, const char* argv[]) {
     }
 
     //TODO; process more pages maybe?
+
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
 
     g_regex_unref(snippet);
 
