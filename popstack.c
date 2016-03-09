@@ -37,6 +37,8 @@ typedef struct {
     int pos;
 } write_result;
 
+static GRegex* snippet;
+
 static size_t write_response(void* ptr, size_t size, size_t nmemb, void* stream) {
     write_result* result = (write_result*) stream;
 
@@ -81,12 +83,22 @@ static char* request(const char* call) {
 }
 
 char* extractSnippet(const char* content) {
-    //TODO: extract snippet
-    //TODO: print snippet
-    return "";
+    GMatchInfo *match_info;
+    char* result = "";
+
+    if (g_regex_match (snippet, content, 0, &match_info)) {
+        result = g_strstrip(g_match_info_fetch (match_info, 1));
+        //TODO: unescape
+    }
+
+    g_match_info_free(match_info);
+    return result;
 }
 
 int main(int argc, const char* argv[]) {
+    // no need for freeing - will just be user through the lifetime of an app
+    snippet = g_regex_new("<pre><code>(.*?)</code></pre>", G_REGEX_DOTALL, 0, NULL);
+
     //TODO: build query from command line args
     //TODO: url-escape query
 
@@ -122,6 +134,8 @@ int main(int argc, const char* argv[]) {
     }
 
     //TODO; process more pages maybe?
+
+    g_regex_unref(snippet);
 
     return 0;
 }
