@@ -5,5 +5,5 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
-sudo apt-get remove --purge -y libjansson4 libjansson-dev libcurl4-openssl-dev
+sudo apt-get remove --purge -y libjansson4 libjansson-dev libcurl4-openssl-dev libglib2.0-0 libglib2.0-dev
 sudo apt-get autoremove --purge -y
