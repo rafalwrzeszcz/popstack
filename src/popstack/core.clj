@@ -47,8 +47,12 @@
     [id]
     (get (nth (get (fetch (str "answers/" id "?filter=withbody")) "items") 0) "body"))
 
+(defn buildQuery
+    [args]
+    (html-utils/url-encode (string/join " " args)))
+
 (defn -main
     [& args]
     ; TODO: first make sure there was a snippet extracted
     ; TODO: process more pages maybe?
-    (println (extractSnippet (getAnswer (ask "Hibernate+manytomany")))))
+    (println (extractSnippet (getAnswer (ask (buildQuery args))))))
