@@ -1,0 +1,17 @@
+#!/usr/bin/python3
+##
+# This file is part of the PopStack (Python implementation).
+#
+# @license http://mit-license.org/ The MIT license
+# @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
+##
+
+import requests
+import urllib.parse
+
+def fetch(call):
+    response = requests.get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
+
+    return response.json()
+
+print(fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany"))
