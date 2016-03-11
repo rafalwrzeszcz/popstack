@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 ##
 # This file is part of the PopStack (Python implementation).
 #
