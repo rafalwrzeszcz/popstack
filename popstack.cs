@@ -97,7 +97,7 @@ namespace PopStack
                     //TODO: first make sure there was a snippet extracted
                     break;
                 }
-                //TODO; process more pages maybe?
+                //TODO: process more pages maybe?
             }
         }
     }
