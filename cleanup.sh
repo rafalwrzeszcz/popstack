@@ -6,6 +6,6 @@
 ##
 
 sudo rm /etc/apt/sources.list.d/ceylon.list
-sudo apt-get remove --purge -y ceylon-1.2.1
+sudo apt-get remove --purge -y ceylon-1.2.0
 sudo apt-get autoremove --purge -y
 sudo apt-get update
