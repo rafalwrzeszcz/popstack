@@ -35,7 +35,9 @@ function extractSnippet(string $content) {
     return '';
 }
 
-$items = fetch('similar?order=desc&sort=relevance&title=Hibernate+manytomany')->items;
+$query = urlencode(implode(array_slice($_SERVER['argv'], 1), ' '));
+
+$items = fetch('similar?order=desc&sort=relevance&title=' . $query)->items;
 foreach ($items as $item) {
     if (isset($item->accepted_answer_id)) {
         echo extractSnippet(
