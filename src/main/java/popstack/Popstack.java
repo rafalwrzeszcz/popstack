@@ -14,11 +14,27 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.http.utils.URLParamEncoder;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+/*TODO:
+ * build consolidated jar (share plugin)
+ * maven project setup
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * error handling
+ * use more language features (like overloaded operators)
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects)
+ * check if we can drop unirest to use just apache commons + org.json (or equivalent)
+ */
 
 public class Popstack {
     private static final Pattern SNIPPET = Pattern.compile("<pre><code>(.*?)</code></pre>", Pattern.DOTALL);
@@ -42,7 +58,9 @@ public class Popstack {
     }
 
     public static void main(String[] args) throws UnirestException {
-        JSONArray items = Popstack.fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")
+        String query = StringUtils.join(args, " ");
+
+        JSONArray items = Popstack.fetch("similar?order=desc&sort=relevance&title=" + URLParamEncoder.encode(query))
             .getJSONArray("items");
         int length = items.length();
         JSONObject item;
