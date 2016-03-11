@@ -13,4 +13,20 @@ function fetch(string $call) {
     );
 }
 
-echo fetch('similar?order=desc&sort=relevance&title=Hibernate+manytomany')->items;
+function extractSnippet(string $content) {
+    return '';
+}
+
+$items = fetch('similar?order=desc&sort=relevance&title=Hibernate+manytomany')->items;
+foreach ($items as $item) {
+    if (isset($item->accepted_answer_id)) {
+        echo extractSnippet(
+            fetch('answers/' . $item->accepted_answer_id . '?filter=withbody')->items[0]->body
+        ), "\n";
+
+        //TODO: first make sure there was a snippet extracted
+        break;
+    }
+}
+
+//TODO: process more pages maybe?
