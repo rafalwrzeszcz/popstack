@@ -7,6 +7,7 @@
 
 require "http/client"
 require "json"
+require "uri"
 
 #TODO
 # dependency management
@@ -31,18 +32,19 @@ end
 def extractSnippet(content)
     match = $snippet.match(content)
     if match
-        return match[0].strip
+        return match[1].strip
         #TODO: unescape
     end
 
     return ""
 end
 
-#TODO: build query from command line arguments
-fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each { |item|
+query = URI.escape(ARGV.join(" "))
+
+fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
     id = item["accepted_answer_id"]?
     if id
-        print(extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"].to_s))
+        puts extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"].to_s)
 
         #TODO: first make sure there was a snippet extracted
         break
