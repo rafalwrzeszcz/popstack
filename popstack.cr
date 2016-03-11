@@ -21,6 +21,7 @@ require "json"
 
 #TODO: get rid of globals after redesigning into some proper project structure
 $client = HTTP::Client.new "api.stackexchange.com"
+$snippet = /<pre><code>(.*?)<\/code><\/pre>/m
 
 def fetch(call)
     response = $client.get "/2.2/" + call + "&site=stackoverflow"
@@ -28,15 +29,20 @@ def fetch(call)
 end
 
 def extractSnippet(content)
-    #TODO: match, extract, trim, unescape
-    return content
+    match = $snippet.match(content)
+    if match
+        return match[0].strip
+        #TODO: unescape
+    end
+
+    return ""
 end
 
 #TODO: build query from command line arguments
 fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each { |item|
     id = item["accepted_answer_id"]?
     if id
-        print(extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"]))
+        print(extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"].to_s))
 
         #TODO: first make sure there was a snippet extracted
         break
