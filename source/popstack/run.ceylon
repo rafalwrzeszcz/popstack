@@ -47,8 +47,8 @@ String extractSnippet(String content) {
     if (exists match) {
         String? code = match.groups[0];
         if (exists code) {
-            return code;
-            //TODO: trim, unescape
+            return code.trimmed;
+            //TODO: unescape
         }
     }
 
@@ -56,6 +56,8 @@ String extractSnippet(String content) {
 }
 
 shared void run() {
+    //TODO: build query from cmd line
+
     fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", (Object data) {
             for (Value item in data.getArray("items")) {
                 if (is Object item) {
@@ -66,9 +68,14 @@ shared void run() {
                                     print(extractSnippet(answer.getString("body")));
                                 }
                         });
+
+                        //TODO: first make sure there was a snippet extracted
                         break;
                     }
                 }
             }
     });
+
+    //TODO; process more pages maybe?
+    //TODO: why app doesn't end after displaying?
 }
