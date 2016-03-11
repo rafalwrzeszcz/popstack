@@ -6,8 +6,10 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
-import sys
+import html
+import re
 import requests
+import sys
 import urllib.parse
 
 # TODO:
@@ -21,13 +23,19 @@ import urllib.parse
 # logs
 # optimize (try to keep some parts of repetitive executions as instanced objects)
 
+snippet = re.compile("<pre><code>(.*?)</code></pre>", re.S)
+
 def fetch(call):
     response = requests.get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
 
     return response.json()
 
 def extractSnippet(content):
-    return content
+    match = snippet.search(content)
+    if match is not None:
+        return html.unescape(match.group(1).strip())
+
+    return ""
 
 query = " ".join(sys.argv[1:])
 
