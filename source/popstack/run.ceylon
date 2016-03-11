@@ -5,7 +5,21 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
+/* TODO
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features (like overloaded operators)
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects)
+ * try to use standard HTTP client instead of Vert.x (we can't upgrade to 1.2.1, but HTTP client breaks on GZip)
+ */
+
 import ceylon.json { Object, Value }
+
+import ceylon.regex { regex, MatchResult, Regex }
 
 import io.vertx.ceylon.core { vertx, Vertx }
 import io.vertx.ceylon.core.buffer { Buffer }
@@ -26,8 +40,19 @@ void fetch(String call, Callable<Anything,[Object]> callback) {
     request.end();
 }
 
+Regex snippet = regex("(?s)<pre><code>(.*?)</code></pre>");
+
 String extractSnippet(String content) {
-    return content;
+    MatchResult? match = snippet.find(content);
+    if (exists match) {
+        String? code = match.groups[0];
+        if (exists code) {
+            return code;
+            //TODO: trim, unescape
+        }
+    }
+
+    return "";
 }
 
 shared void run() {
