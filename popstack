@@ -1,0 +1,11 @@
+#!/bin/bash
+##
+# This file is part of the PopStack (Kotlin implementation).
+#
+# @license http://mit-license.org/ The MIT license
+# @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
+##
+
+java \
+    -cp target/popstack-0.0.1-SNAPSHOT.jar:/home/rafal.wrzeszcz/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.0.0-rc-1036/kotlin-stdlib-1.0.0-rc-1036.jar:/home/rafal.wrzeszcz/.m2/repository/org/jetbrains/kotlin/kotlin-runtime/1.0.0-rc-1036/kotlin-runtime-1.0.0-rc-1036.jar \
+    popstack.PopstackKt $@
