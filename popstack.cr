@@ -33,7 +33,7 @@ def extractSnippet(content)
 end
 
 #TODO: build query from command line arguments
-fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each do |item|
+fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each { |item|
     id = item["accepted_answer_id"]?
     if id
         print(extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"]))
@@ -41,7 +41,7 @@ fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].e
         #TODO: first make sure there was a snippet extracted
         break
     end
-end
+}
 
 #TODO: process more pages maybe?
 
