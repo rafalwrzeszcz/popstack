@@ -19,6 +19,8 @@
 
 import ceylon.json { Object, Value }
 
+import ceylon.net.uri { percentEncoder }
+
 import ceylon.regex { regex, MatchResult, Regex }
 
 import io.vertx.ceylon.core { vertx, Vertx }
@@ -56,13 +58,14 @@ String extractSnippet(String content) {
 }
 
 shared void run() {
-    //TODO: build query from cmd line
+    String query = percentEncoder.encodeFragment(" ".join(process.arguments));
 
-    fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", (Object data) {
+    fetch("similar?order=desc&sort=relevance&title=" + query, (Object data) {
             for (Value item in data.getArray("items")) {
                 if (is Object item) {
                     if (item.defines("accepted_answer_id")) {
-                        fetch("answers/" + item.getInteger("accepted_answer_id").string + "?filter=withbody", (Object data) {
+                        String id = item.getInteger("accepted_answer_id").string;
+                        fetch("answers/" + id + "?filter=withbody", (Object data) {
                                 Value answer = data.getArray("items").get(0);
                                 if (is Object answer) {
                                     print(extractSnippet(answer.getString("body")));
