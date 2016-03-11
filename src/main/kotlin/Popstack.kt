@@ -7,17 +7,26 @@
 
 package popstack;
 
+import java.net.URLEncoder;
+
 import com.github.kittinunf.fuel.Fuel;
 import com.github.kittinunf.fuel.core.Request;
 import com.github.kittinunf.fuel.core.Response;
 
-fun fetch(call: String): String {
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+fun fetch(call: String): JSONObject {
     val (request: Request, response: Response, result: String) = Fuel
         .get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
         .responseString();
-    return result;
+    return JSONObject(result);
 }
 
 fun main(args: Array<String>) {
-    println(fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany"));
+    val query: String = args.joinToString(" ");
+
+    val items: JSONArray = fetch("similar?order=desc&sort=relevance&title=" + URLEncoder.encode(query))
+        .getJSONArray("items");
+    
 }
