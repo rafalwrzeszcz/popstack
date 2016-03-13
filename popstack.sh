@@ -15,4 +15,6 @@ ANSWER_ID=`fetch "similar?order=desc&sort=relevance&title=Hibernate+manytomany" 
     | head -n 1`
 
 fetch "answers/$ANSWER_ID?filter=withbody" \
-    | jshon -QC -e items -e 0 -e body -u
+    | jshon -QC -e items -e 0 -e body -u \
+    | sed -n '1h;1!H;${;g;s/^.*<pre><code>\(.*\)<\/code><\/pre>.*$/\1/g;p;}' \
+    | grep -v '^$'
