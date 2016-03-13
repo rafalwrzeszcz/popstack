@@ -44,10 +44,10 @@ String extractSnippet(String content) {
     return "";
 }
 
-void main() {
-    //TODO: build query from command line arguments
+void main(List<String> args) {
+    String query = args.join(" ");
 
-    fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", (dynamic data) {
+    fetch("similar?order=desc&sort=relevance&title=" + Uri.encodeQueryComponent(query), (dynamic data) {
             for (dynamic item in data["items"]) {
                 if (item.containsKey("accepted_answer_id")) {
                     fetch("answers/" + item["accepted_answer_id"].toString() + "?filter=withbody", (dynamic data) {
