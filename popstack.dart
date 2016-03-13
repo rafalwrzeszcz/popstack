@@ -8,6 +8,18 @@
 import "dart:convert";
 import "dart:io";
 
+/* TODO:
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects)
+ * why program hangs after finishing request - probably HTTP client needs to be closed
+ */
+
 HttpClient client = new HttpClient();
 
 void fetch(String call, Function handler) {
@@ -20,12 +32,21 @@ void fetch(String call, Function handler) {
         });
 }
 
+RegExp snippet = new RegExp("<pre><code>([\\s\\S]*?)</code></pre>");
+
 String extractSnippet(String content) {
-    //TODO
-    return content;
+    Match match = snippet.firstMatch(content);
+    if (match != null) {
+        return match.group(1).trim();
+        //TODO: unescape
+    }
+
+    return "";
 }
 
 void main() {
+    //TODO: build query from command line arguments
+
     fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", (dynamic data) {
             for (dynamic item in data["items"]) {
                 if (item.containsKey("accepted_answer_id")) {
