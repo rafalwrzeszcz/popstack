@@ -5,10 +5,35 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
-import std.conv, std.json, std.net.curl, std.stdio, std.zlib;
+import std.array: join;
+import std.conv: to;
+import std.json: parseJSON, JSONValue;
+import std.net.curl: AutoProtocol, get;
+import std.regex: matchFirst, regex;
+import std.stdio: writeln;
+import std.string: strip;
+import std.uri: encode;
+import std.xml: decode;
+import std.zlib: HeaderFormat, UnCompress;
+
+/* TODO
+ * build tool
+ * dependency management
+ * code style
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features
+ * logs
+ * optimize (try to keep some parts of repetitive executions as instanced objects, investigate memory allocation)
+ * "proper" HTTP client setup (headers, gzip as a middleware)
+ */
+
+auto snippet = regex(`<pre><code>(.*?)</code></pre>`, "s");
 
 JSONValue fetch(string call) {
-    ubyte[] response = get!(AutoProtocol,ubyte)("http://api.stackexchange.com/2.2/" ~ call ~ "&site=stackoverflow");
+    ubyte[] response = get!(AutoProtocol, ubyte)("http://api.stackexchange.com/2.2/" ~ call ~ "&site=stackoverflow");
     UnCompress inflator = new UnCompress(HeaderFormat.gzip);
     const(void)[] buffer;
     char[] content = [];
@@ -21,12 +46,17 @@ JSONValue fetch(string call) {
 }
 
 string extractSnippet(string content) {
-    //TODO: match, extract, trim, unescape
-    return content;
+    auto match = matchFirst(content, snippet);
+    if (!match.empty) {
+        return decode(strip(match[1]));
+    }
+
+    return "";
 }
 
-void main() {
-    JSONValue data = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"];
+void main(string[] args) {
+    string query = join(args, " ");
+    JSONValue data = fetch("similar?order=desc&sort=relevance&title=" ~ encode(query))["items"];
     JSONValue[string] properties;
     foreach (JSONValue item; data.array()) {
         properties = item.object();
