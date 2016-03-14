@@ -25,6 +25,7 @@ def fetch(call)
     return JSON.parse(response)
 end
 
+#TODO: get rid of global variables
 $snippet = /<pre><code>(.*?)<\/code><\/pre>/m
 
 def extractSnippet(content)
@@ -36,7 +37,9 @@ def extractSnippet(content)
     return ""
 end
 
-fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each { |item|
+query = URI.escape(ARGV.join(" "))
+
+fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
     if item.key?("accepted_answer_id")
         puts extractSnippet(fetch("answers/" + item["accepted_answer_id"].to_s + "?filter=withbody")["items"][0]["body"])
 
