@@ -67,8 +67,9 @@ function extractSnippet(content: string): string {
     return "";
 }
 
-// todo: build query from command line arguments
-fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", function(questions: Object): void {
+let query: string = process.argv.slice(2).join(" ");
+
+fetch("similar?order=desc&sort=relevance&title=" + encodeURIComponent(query), function(questions: Object): void {
         let items: Question[] = (questions as QuestionsResponse).items;
         for (let i: number = 0; i < items.length; ++i) {
             if ("accepted_answer_id" in items[i]) {
