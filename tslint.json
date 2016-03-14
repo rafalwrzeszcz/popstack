@@ -1,0 +1,99 @@
+{
+    "rules": {
+        "member-access": [
+            true,
+            "check-accessor"
+        ],
+        "member-ordering": [
+            true,
+            "static-before-instance",
+            "variables-before-functions"
+        ],
+        "no-any": true,
+        "no-var-requires": true,
+        "typedef": [
+            true,
+            "call-signature",
+            "parameter",
+            "property-declaration",
+            "variable-declaration",
+            "member-variable-declaration"
+        ],
+
+        "curly": true,
+        "label-undefined": true,
+        "no-arg": true,
+        "no-construct": true,
+        "no-debugger": true,
+        "no-duplicate-key": true,
+        "no-duplicate-variable": true,
+        "no-empty": true,
+        "no-eval": true,
+        "no-shadowed-variable": true,
+        "no-string-literal": true,
+        "no-unreachable": true,
+        "no-unused-expression": true,
+        "no-unused-variable": true,
+        "no-use-before-declare": true,
+        "no-var-keyword": true,
+        "radix": true,
+        "triple-equals": true,
+        "use-strict": true,
+
+        "eofline": true,
+        "indent": [
+            true,
+            "spaces"
+        ],
+        "max-line-length": [
+            true,
+            120
+        ],
+        "no-require-imports": true,
+        "no-trailing-whitespace": true,
+        "trailing-comma": [
+            true,
+            {
+                "multiline": "always",
+                "singleline": "never"
+            }
+        ],
+
+        "class-name": true,
+        "comment-format": [
+            true,
+            "check-space",
+            "check-lowercase"
+        ],
+        "jsdoc-format": true,
+        "no-consecutive-blank-lines": true,
+        "no-constructor-vars": true,
+        "one-line": [
+            true,
+            "check-catch",
+            "check-else",
+            "check-open-brace",
+            "check-whitespace"
+        ],
+        "quotemark": [
+            true,
+            "double",
+            "jsx-double"
+        ],
+        "semicolon": true,
+        "variable-name": [
+            true,
+            "check-format"
+        ],
+        "whitespace": [
+            true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-module",
+            "check-seperator",
+            "check-type",
+            "check-typecast"
+        ]
+    }
+}
