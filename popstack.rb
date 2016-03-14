@@ -5,6 +5,7 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
+require "cgi"
 require "json"
 require "net/http"
 
@@ -24,9 +25,20 @@ def fetch(call)
     return JSON.parse(response)
 end
 
+$snippet = /<pre><code>(.*?)<\/code><\/pre>/m
+
+def extractSnippet(content)
+    match = $snippet.match(content)
+    if match
+        return CGI.unescapeHTML(match[1].strip)
+    end
+
+    return ""
+end
+
 fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"].each { |item|
     if item.key?("accepted_answer_id")
-        puts item["accepted_answer_id"]
+        puts extractSnippet(fetch("answers/" + item["accepted_answer_id"].to_s + "?filter=withbody")["items"][0]["body"])
 
         #TODO: first make sure there was a snippet extracted
         break
