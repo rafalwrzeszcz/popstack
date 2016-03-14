@@ -7,3 +7,4 @@
 
 cpan HTTP::Client
 cpan JSON
+cpan URI::Encode

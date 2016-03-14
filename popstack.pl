@@ -12,6 +12,18 @@ use HTML::Entities;
 use HTTP::Client;
 use IO::Uncompress::Gunzip qw(gunzip);
 use JSON;
+use URI::Encode qw(uri_encode);
+
+# TODO:
+# dependency management
+# code style
+# static code analysis
+# unit tests
+# auto documentation
+# exception handling
+# use more language features (and investigate currently used ones)
+# logs
+# optimize (try to keep some parts of repetitive executions as instanced objects)
 
 my $client = HTTP::Client->new();
 
@@ -36,7 +48,9 @@ sub extractSnippet {
 }
 
 # TODO: any way to shorten this?
-my $data = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+my $query = uri_encode(join(" ", @ARGV));
+
+my $data = fetch("similar?order=desc&sort=relevance&title=" . $query);
 my $items = %$data{"items"};
 foreach (@$items) {
     if (defined "accepted_answer_id") {
