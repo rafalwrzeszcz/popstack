@@ -7,22 +7,81 @@
 
 /// <reference path="typings/node/node.d.ts"/>
 
-import { get } from "http";
+/* TODO:
+ * static code analysis
+ * unit tests
+ * auto documentation
+ * exception handling
+ * use more language features
+ * logs
+ */
+
+import { get, IncomingMessage } from "http";
 import { createGunzip, Gunzip } from "zlib";
 
-function fetch(call: String): void {
-    get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow", function(response) {
-        var gunzip: Gunzip = createGunzip()
-        var buffer: string = "";
+interface Consumer {
+    (data: Object): void;
+}
 
-        response.pipe(gunzip);
-        gunzip.on("data", function(chunk) {
-            buffer += chunk;
-        });
-        gunzip.on("end", function() {
-            console.log(JSON.parse(buffer));
-        });
+interface Question {
+    accepted_answer_id?: number;
+}
+
+interface QuestionsResponse {
+    items: Question[];
+}
+
+interface Answer {
+    body: string;
+}
+
+interface AnswersResponse {
+    items: Answer[];
+}
+
+// todo: use promise
+function fetch(call: String, consumer: Consumer): void {
+    get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow", function(response: IncomingMessage): void {
+            let gunzip: Gunzip = createGunzip();
+            let buffer: string = "";
+
+            response.pipe(gunzip);
+            gunzip.on("data", function(chunk: string): void {
+                    buffer += chunk;
+            });
+            gunzip.on("end", function(): void {
+                    consumer(JSON.parse(buffer));
+            });
     });
 }
 
-fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+let snippet: RegExp = /<pre><code>([\s\S]*?)<\/code><\/pre>/;
+
+function extractSnippet(content: string): string {
+    let match: string[] = content.match(snippet);
+    if (match) {
+        return match[1].trim();
+        // todo: unescape
+    }
+
+    return "";
+}
+
+// todo: build query from command line arguments
+fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany", function(questions: Object): void {
+        let items: Question[] = (questions as QuestionsResponse).items;
+        for (let i: number = 0; i < items.length; ++i) {
+            if ("accepted_answer_id" in items[i]) {
+                fetch("answers/" + items[i].accepted_answer_id + "?filter=withbody", function(answers: Object): void {
+                        let answer: Answer = (answers as AnswersResponse).items[0];
+
+                        console.log(extractSnippet(answer.body));
+                });
+
+                // todo: first make sure there was a snippet extracted
+                break;
+            }
+        }
+
+        // todo: process more pages maybe?
+});
