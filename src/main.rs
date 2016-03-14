@@ -7,6 +7,8 @@
 
 extern crate flate2;
 extern crate hyper;
+extern crate regex;
+extern crate serde_json;
 
 /* TODO
  * code style
@@ -28,7 +30,11 @@ use hyper::Client;
 use hyper::client::Response;
 use hyper::header::{AcceptEncoding, Encoding, qitem};
 
-fn fetch(call: &str) -> String {
+use regex::Regex;
+
+use serde_json::{Value, from_str};
+
+fn fetch(call: &str) -> Value {
     //TODO: make it reusable
     let client: Client = Client::new();
 
@@ -49,9 +55,43 @@ fn fetch(call: &str) -> String {
     let mut body: String = String::new();
     gzip.read_to_string(&mut body).unwrap();
 
-    return body;
+    return from_str(&body).unwrap();
+}
+
+fn extract_snippet(content: &str) -> &str {
+    let snippet: Regex = Regex::new("(?s)<pre><code>(.*?)</code></pre>").unwrap();
+    match snippet.captures(content) {
+        Some(group) => {
+            return group.at(1).unwrap().trim();
+            //TODO: unescape
+        },
+        None => return "",
+    }
 }
 
 fn main() {
-    println!("{}", fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany"));
+    //TODO: build query from command line arguments
+    let items: Value = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")
+        .find("items").unwrap().to_owned();
+    for item in items.as_array().unwrap() {
+        match item.find("accepted_answer_id") {
+            Some(id) => {
+                //TODO: is there a better way?
+                let mut call: String = "answers/".to_owned();
+                call.push_str(&id.as_u64().unwrap().to_string());
+                call.push_str("?filter=withbody");
+
+                //TODO: any shorter way?
+                let answers: Value = fetch(&call).find("items").unwrap().to_owned();
+                let ref answer: Value = answers.as_array().unwrap()[0];
+                println!("{}", extract_snippet(answer.find("body").unwrap().as_string().unwrap()));
+
+                //TODO: first make sure there was a snippet extracted
+                break;
+            },
+            None => (),
+        }
+    }
+
+    //TODO: process more pages maybe?
 }

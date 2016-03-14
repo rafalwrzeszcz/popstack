@@ -5,6 +5,8 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
+sudo apt-get remove --purge -y gdb
+sudo apt-get autoremove --purge -y
 sudo rm -fr \
     /usr/local/bin/{cargo,rustc,rustdoc,rust-gdb} \
     /usr/local/etc/bash_completion.d \
