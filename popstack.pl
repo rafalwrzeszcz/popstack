@@ -8,8 +8,10 @@
 use strict;
 use warnings;
 
+use HTML::Entities;
 use HTTP::Client;
 use IO::Uncompress::Gunzip qw(gunzip);
+use JSON;
 
 my $client = HTTP::Client->new();
 
@@ -19,7 +21,34 @@ sub fetch {
     my $response;
 
     gunzip \$buffer => \$response;
-    return $response;
+    return decode_json($response);
 }
 
-print fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+# TODO: it shuold just accept $content, $key should be dropped in caller
+sub extractSnippet {
+    my ($key, $content) = @_;
+
+    if (my ($snippet) = $content =~ /<pre><code>(.*?)<\/code><\/pre>/s) {
+        return decode_entities($snippet);
+    }
+
+    return "";
+}
+
+# TODO: any way to shorten this?
+my $data = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany");
+my $items = %$data{"items"};
+foreach (@$items) {
+    if (defined "accepted_answer_id") {
+        my ($key, $id) = %$_{"accepted_answer_id"};
+        $data = fetch("answers/" . $id . "?filter=withbody");
+        $items = %$data{"items"};
+        my $item = @$items[0];
+        print extractSnippet(%$item{"body"});
+
+        # TODO: first make sure there was a snippet extracted
+        last;
+    }
+}
+
+# TODO: process more pages maybe?
