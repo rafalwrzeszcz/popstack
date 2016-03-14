@@ -9,6 +9,7 @@ extern crate flate2;
 extern crate hyper;
 extern crate regex;
 extern crate serde_json;
+extern crate url;
 
 /* TODO
  * code style
@@ -22,6 +23,7 @@ extern crate serde_json;
  * "proper" HTTP client setup (headers, gzip as a middleware)
  */
 
+use std::env;
 use std::io::Read;
 
 use flate2::read::GzDecoder;
@@ -33,6 +35,8 @@ use hyper::header::{AcceptEncoding, Encoding, qitem};
 use regex::Regex;
 
 use serde_json::{Value, from_str};
+
+use url::percent_encoding::{DEFAULT_ENCODE_SET, utf8_percent_encode};
 
 fn fetch(call: &str) -> Value {
     //TODO: make it reusable
@@ -70,8 +74,11 @@ fn extract_snippet(content: &str) -> &str {
 }
 
 fn main() {
-    //TODO: build query from command line arguments
-    let items: Value = fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")
+    let args: Vec<String> = env::args().skip(1).collect();
+    let mut query: String = "similar?order=desc&sort=relevance&title=".to_owned();
+    query.push_str(&utf8_percent_encode(&args.join(" "), DEFAULT_ENCODE_SET));
+
+    let items: Value = fetch(&query)
         .find("items").unwrap().to_owned();
     for item in items.as_array().unwrap() {
         match item.find("accepted_answer_id") {

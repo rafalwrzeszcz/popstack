@@ -8,3 +8,6 @@ flate2 = { version = "0.2", features = ["zlib"], default-features = false }
 hyper = "0.7"
 regex = "0.1"
 serde_json = "0.7.0"
+
+[dependencies.url]
+git = "https://github.com/servo/rust-url"
