@@ -28,6 +28,7 @@ import org.json.JSONObject;
  * logs
  * optimize
  * check if we can drop unirest to use just apache commons + org.json (or equivalent)
+ * fix compiler warnings
  */
 
 val snippet: Regex = Regex("<pre><code>(.*?)</code></pre>", RegexOption.DOT_MATCHES_ALL);
