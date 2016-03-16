@@ -5,6 +5,17 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
+#TODO
+# code style
+# static code analysis
+# unit tests
+# auto documentation
+# exception handling
+# use more language features
+# logs
+# optimize (try to keep some parts of repetitive executions as instanced objects)
+# "proper" HTTP client setup (headers, gzip as a middleware?)
+
 defmodule Popstack do
     def fetch(call) do
         HTTPotion.get("http://api.stackexchange.com/2.2/" <> call <> "&site=stackoverflow").body
@@ -13,8 +24,14 @@ defmodule Popstack do
     end
 
     def extractSnippet(content) do
-        #TODO: match, extract, trim, unescape
-        content
+        snippet = ~r/<pre><code>(.*?)<\/code><\/pre>/s
+        if Regex.match? snippet, content do
+            [_, result] = Regex.run snippet, content
+            #TODO: unescape
+            String.strip result
+        else
+            ""
+        end
     end
 
     def answer(id) do
