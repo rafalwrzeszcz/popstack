@@ -28,7 +28,7 @@ function fetch(string $call) {
 }
 
 function extractSnippet(string $content) {
-    if (preg_match('#<pre><code>(.*?)</code></pre>#s', $content, $match) !== false) {
+    if (preg_match('#<pre><code>(.*?)</code></pre>#s', $content, $match) > 0) {
         return htmlspecialchars_decode(trim($match[1])) . "\n";
     }
 
