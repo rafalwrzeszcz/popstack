@@ -23,7 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /*TODO:
- * build consolidated jar (share plugin)
+ * build consolidated jar (shade plugin)
  * maven project setup
  * code style
  * static code analysis
