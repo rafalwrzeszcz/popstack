@@ -15,6 +15,7 @@ defmodule Popstack.Mixfile do
             elixir: "~> 1.2",
             build_embedded: Mix.env == :prod,
             start_permanent: Mix.env == :prod,
+            escript: [main_module: Popstack],
             deps: deps
         ]
     end
@@ -25,7 +26,8 @@ defmodule Popstack.Mixfile do
 
     defp deps do
         [
-            {:httpotion, "~> 2.2.0"}
+            {:httpotion, "~> 2.2.0"},
+            {:exjsx, "~> 3.1.0"}
         ]
     end
 end
