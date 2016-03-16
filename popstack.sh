@@ -17,7 +17,7 @@ ANSWER_ID=`fetch "similar?order=desc&sort=relevance&title=$QUERY" \
     | jshon -QC -e items -a -e accepted_answer_id \
     | head -n 1`
 
+#TODO: this matched LAST, not FIRST occurance, but I guess it's fine for "MVP" ;)
 fetch "answers/$ANSWER_ID?filter=withbody" \
     | jshon -QC -e items -e 0 -e body -u \
-    #TODO: this matched LAST, not FIRST occurance, but I guess it's fine for "MVP" ;)
     | sed -n '1h;1!H;${;g;s/^.*<pre><code>\(.*\)<\/code><\/pre>.*$/\1/g;p;}'
