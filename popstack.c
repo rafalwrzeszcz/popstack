@@ -87,7 +87,7 @@ char* extractSnippet(const char* content) {
     char* result = "";
 
     if (g_regex_match (snippet, content, 0, &match_info)) {
-        result = g_strstrip(g_match_info_fetch (match_info, 1));
+        result = g_strstrip(g_match_info_fetch(match_info, 1));
         //TODO: unescape
     }
 
