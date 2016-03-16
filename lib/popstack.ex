@@ -54,8 +54,7 @@ defmodule Popstack do
     end
 
     def main(args) do
-        #TODO: build query from command line arguments
-        Popstack.fetch("similar?order=desc&sort=relevance&title=Hibernate+manytomany")["items"]
+        Popstack.fetch("similar?order=desc&sort=relevance&title=" <> URI.encode(Enum.join args, " "))["items"]
         |> Popstack.questions
         |> IO.puts
     end
