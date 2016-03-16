@@ -5,7 +5,7 @@
 ## What is it?
 
 It's the must-have tool for every developer. It allows you to copy-paste form [**StackOverflow**](stackoverflow.com)
-just what you need, without reading all of that tons of descriptive explaination about roots of your problem - it just
+just what is needed, without reading all those tons of descriptive explaination about roots of your problem - it just
 gives you the answer you came there for! If you wanted to know why you have this strange `NullPointerException`, you
 would read some documentation, run debugger - you just want it to work!
 
@@ -62,7 +62,7 @@ giving right now better match than `./popstach git grep hisotry`.
 ## What is it for me?
 
 For me, personally, that was one big playground. In my spare time, when commuting back home by the train from Berlin
-to Szczecin is had few evenings to spend on it. The (initial) solution is very trivial, so I decided to use it as an
+to Szczecin I had few evenings to spend on it. The (initial) solution is very trivial, so I decided to use it as an
 excuse to work with some new stuff and gain some new skills.
 
 # Implementation
@@ -70,13 +70,10 @@ excuse to work with some new stuff and gain some new skills.
 Below is the list of the branches that are being currently active (you may check repository branches to see list of
 historical implementations, that are not being updated anymore), just pick the one which suites you the best:
 
-- [popstack-bash](https://github.com/rafalwrzeszcz/popstack/tree/popstack-bash) - Bash shell script;
 - [popstack-c](https://github.com/rafalwrzeszcz/popstack/tree/popstack-c) -  C source - requires compilation (uses
 GLib, Jasson and Curl);
 - [popstack-c++](https://github.com/rafalwrzeszcz/popstack/tree/popstack-c++)- C++ source - requires compilation on
 it's own as well as building dependencies (also uses some Boost libraries);
-- [popstack-ceylon](https://github.com/rafalwrzeszcz/popstack/tree/popstack-ceylon) - Ceylon (JVM target)
-implementation based on Vert.x - requires Ceylon for compilation;
 - [popstack-clojure](https://github.com/rafalwrzeszcz/popstack/tree/popstack-clojure) - Clojure (JVM);
 - [popstack-crystal](https://github.com/rafalwrzeszcz/popstack/tree/popstack-crystal) - Crystal source - requires
 compilation;
@@ -84,21 +81,12 @@ compilation;
 Mono;
 - [popstack-d](https://github.com/rafalwrzeszcz/popstack/tree/popstack-d) - D source - requires compilation, uses only
 standard D library, no external dependencies;
-- [popstack-dart](https://github.com/rafalwrzeszcz/popstack/tree/popstack-dart) - Dart source, no external
-dependencies;
-- [popstack-elixir](https://github.com/rafalwrzeszcz/popstack/tree/popstack-elixir) - Elixir source code, you must have
-Elixir installed for compilation and Erlang VM to run the app;
 - [popstack-go](https://github.com/rafalwrzeszcz/popstack/tree/popstack-go) - Go source, only standard libraries used;
 - [popstack-hack](https://github.com/rafalwrzeszcz/popstack/tree/popstack-hack) - HHVM/Hack script - right now it's
 just PHP source ensured to work under HHVM, plan to investigate more Hack features later;
 - [popstack-java](https://github.com/rafalwrzeszcz/popstack/tree/popstack-java) - Java source code based on Unirest;
 - [popstack-kotlin](https://github.com/rafalwrzeszcz/popstack/tree/popstack-kotlin) - Kotlin (another JVM-targetted)
 implementation, using Fuel;
-- [popstacj-objective-c](https://github.com/rafalwrzeszcz/popstack/tree/popstack-objective-c) - Objective-C source, for
-now it's just a C source, I want to play a little with the language itself, but it's pain in the ass to find some
-idiomatic solutions in the ocean of iOS-related shit :/;
-- [popstack-perl](https://github.com/rafalwrzeszcz/popstack/tree/popstack-perl) - I don't have a cat, had to write all
-of this Perl script on my own!;
 - [popstack-php](https://github.com/rafalwrzeszcz/popstack/tree/popstack-php) - PHP source code, no dependencies;
 - [popstack-python](https://github.com/rafalwrzeszcz/popstack/tree/popstack-python) - Python script;
 - [popstack-ruby](https://github.com/rafalwrzeszcz/popstack/tree/popstack-ruby) - Ruby script - another dependency-free
@@ -129,3 +117,7 @@ I also didn't want to play with various **Node.JS** targets like **CoffeeScript*
 opinion they don't bring anything very usefull in general (just for particular cases) and makes it harder to experience
 real **Node.JS** benefits. I've choosen [**TypeScript**](www.typescriptlang.org) as it's the only one major
 compile-to-JS language that doesn't re-invent the wheel, but just adds (great!) features.
+
+And some of them were simply abandoned. I'm not going to handle 30 branches all the time. It's just a play for me and
+when it doesn't give me fun (satisfaction) it's not worth. Some languages simply don't fit this problem and some are
+simply not funny at all (to me).
