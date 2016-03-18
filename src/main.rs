@@ -48,7 +48,10 @@ enum AppError {
 
 impl From<HyperError> for AppError {
     fn from(error: HyperError) -> AppError {
-        AppError::Hyper(error)
+        match error {
+            HyperError::Io(error) => AppError::Io(error),
+            _ => AppError::Hyper(error),
+        }
     }
 }
 
@@ -67,62 +70,88 @@ impl From<IoError> for AppError {
 type AppResult<Type> = Result<Type, AppError>;
 
 fn fetch(call: &str) -> AppResult<Value> {
-    //TODO: make it reusable
-    let client: Client = Client::new();
+    //TODO: make it reusable - once provider abstraction is separated this can be done by struct property
+    let client = Client::new();
 
-    //TODO: is there a better way?
-    let mut url: String = "http://api.stackexchange.com/2.2/".to_owned();
+    let mut url = "http://api.stackexchange.com/2.2/".to_owned();
     url.push_str(call);
     url.push_str("&site=stackoverflow");
 
     let response = try!(client.get(&url).send());
     let mut gzip = try!(GzDecoder::new(response));
-    let mut body: String = String::new();
+    let mut body = String::new();
     try!(gzip.read_to_string(&mut body));
     from_str(&body).map_err(AppError::from)
 }
 
-fn extract_snippet(content: &str) -> Option<&str> {
+fn extract_snippet(content: &str) -> Option<String> {
     // this `.unwrap()` is safe as long as the regex is valid at compile time
-    let snippet: Regex = Regex::new("(?s)<pre><code>(.*?)</code></pre>").unwrap();
+    let snippet = Regex::new("(?s)<pre><code>(.*?)</code></pre>").unwrap();
     // this `.unwrap()` is safe as the regex match guarantees that there will be group 1
-    snippet.captures(content).map(|group| group.at(1).unwrap().trim())
+    snippet.captures(content).map(|group| group.at(1).unwrap().trim().to_owned())
+}
+
+fn find_answer(id: u64) -> AppResult<Option<String>> {
+    let mut call = "answers/".to_owned();
+    call.push_str(&id.to_string());
+    call.push_str("?filter=withbody");
+
+    //TODO: it's a little messy, find out how to borrow needed values for required lifetime
+    let root = try!(fetch(&call));
+    match root
+        .find("items")
+        .and_then(|node| node.as_array())
+    {
+        Some(items) => {
+            let ref answer = items[0].to_owned();
+
+            Ok(
+                answer
+                    .find("body")
+                    .and_then(|node| node.as_string())
+                    .and_then(extract_snippet)
+            )
+        },
+        None => Ok(None),
+    }
+}
+
+//TODO: consider if we need Result<Option<>>, or maybe it's fine to use Result<String> and signal no result as Error
+fn ask(query: &str) -> AppResult<Option<String>> {
+    let mut url = "similar?order=desc&sort=relevance&title=".to_owned();
+    url.push_str(query);
+
+    let root = try!(fetch(&url));
+    match root
+        .find("items")
+    {
+        Some(&Value::Array(ref items)) => {
+            //TODO: try to somehow flattern this
+            for item in items {
+                match item.find("accepted_answer_id") {
+                    Some(&Value::U64(id)) => {
+                        match try!(find_answer(id)) {
+                            Some(snippet) => return Ok(Some(snippet)),
+                            _ => (),
+                        }
+                    },
+                    _ => (),
+                }
+            }
+        },
+        _ => (),
+    }
+
+    Ok(None)
 }
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
-    let mut query: String = "similar?order=desc&sort=relevance&title=".to_owned();
-    query.push_str(&utf8_percent_encode(&args.join(" "), DEFAULT_ENCODE_SET));
 
-    //TODO: handle unwraps
-    let items: Value = fetch(&query).unwrap()
-        .find("items").unwrap().to_owned();
-    //TODO: handle unwrap
-    for item in items.as_array().unwrap() {
-        match item.find("accepted_answer_id") {
-            Some(id) => {
-                //TODO: is there a better way?
-                let mut call: String = "answers/".to_owned();
-                //TODO: handle unwrap
-                call.push_str(&id.as_u64().unwrap().to_string());
-                call.push_str("?filter=withbody");
-
-                //TODO: any shorter way?
-                //TODO: handle unwrap
-                let answers: Value = fetch(&call).unwrap().find("items").unwrap().to_owned();
-                //TODO: handle unwrap
-                let ref answer: Value = answers.as_array().unwrap()[0];
-                //TODO: handle unwraps
-                println!("{}", extract_snippet(answer.find("body").unwrap().as_string().unwrap()).unwrap());
-
-                //TODO: first make sure there was a snippet extracted
-                break;
-            },
-            None => (),
-        }
+    match ask(&utf8_percent_encode(&args.join(" "), DEFAULT_ENCODE_SET)) {
+        Ok(Some(snippet)) => println!("{}", snippet),
+        //TODO: process more pages maybe?
+        Ok(None) => println!("Your only help is http://google.com/ man!"),
+        Err(error) => println!("Error occured: {:?}", error),
     }
-
-    //TODO: process more pages maybe?
-
-    //TODO: wrap everything into match result to print possible error
 }
