@@ -4,6 +4,7 @@ version = "0.1.1"
 dependencies = [
  "flate2 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "marksman_escape 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.1.57 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 0.5.7 (git+https://github.com/servo/rust-url)",
@@ -138,6 +139,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "marksman_escape"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "matches"

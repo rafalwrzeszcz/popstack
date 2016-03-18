@@ -8,6 +8,7 @@
 extern crate core;
 extern crate flate2;
 extern crate hyper;
+extern crate marksman_escape;
 extern crate regex;
 extern crate serde_json;
 extern crate url;
@@ -31,6 +32,8 @@ use flate2::read::GzDecoder;
 
 use hyper::Client;
 use hyper::error::Error as HyperError;
+
+use marksman_escape::Unescape;
 
 use regex::Regex;
 
@@ -88,7 +91,9 @@ fn extract_snippet(content: &str) -> Option<String> {
     // this `.unwrap()` is safe as long as the regex is valid at compile time
     let snippet = Regex::new("(?s)<pre><code>(.*?)</code></pre>").unwrap();
     // this `.unwrap()` is safe as the regex match guarantees that there will be group 1
-    snippet.captures(content).map(|group| group.at(1).unwrap().trim().to_owned())
+    snippet.captures(content)
+        .map(|group| group.at(1).unwrap().trim().to_owned())
+        .and_then(|string| String::from_utf8(Unescape::new(string.bytes()).collect()).ok())
 }
 
 fn find_answer(id: u64) -> AppResult<Option<String>> {
