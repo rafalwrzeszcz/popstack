@@ -17,13 +17,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /*TODO:
- * build consolidated jar (share plugin)
+ * build consolidated jar (shade plugin)
  * maven project setup
  * code style
  * static code analysis
  * unit tests
  * auto documentation
- * error handling
  * use more language features (like overloaded operators)
  * logs
  * optimize
@@ -40,42 +39,56 @@ fun fetch(call: String): JSONObject {
     return JSONObject(result);
 }
 
-fun extractSnippet(content: String): String {
+fun extractSnippet(content: String): String? {
     val match: MatchResult? = snippet.find(content);
     if (match != null) {
-        val group: MatchGroup? = match.groups[1];
-        if (group != null) {
-            return group.value.trim();
-            //TODO: unescape
-        }
+        return match.groups[1]?.value?.trim()
+            ?.replace("&lt;", "<")
+            ?.replace("&gt;", ">")
+            ?.replace("&quot;", "\"")
+            // this one has to be the last one!
+            ?.replace("&amp;", "&");
     }
 
-    return "";
+    return null;
 }
 
 fun main(args: Array<String>): Unit {
     val query: String = args.joinToString(" ");
 
-    var items: JSONArray = fetch("similar?order=desc&sort=relevance&title=" + URLEncoder.encode(query, "UTF-8"))
-        .getJSONArray("items");
-    var length: Int = items.length();
-    var item: JSONObject;
-    var i: Int = 0;
-    while (i < length) {
-        item = items.getJSONObject(i);
+    try {
+        var items: JSONArray = fetch("similar?order=desc&sort=relevance&title=" + URLEncoder.encode(query, "UTF-8"))
+            .getJSONArray("items");
+        var length: Int = items.length();
+        var item: JSONObject;
+        var i: Int = 0;
+        var answer: String? = null;
+        while (i < length) {
+            item = items.getJSONObject(i);
 
-        if (item.has("accepted_answer_id")) {
-            val id: Int = item.getInt("accepted_answer_id");
-            //TODO: don't really like that - is there any way to simply convert form Int to String?
-            items = fetch("answers/$id?filter=withbody").getJSONArray("items");
+            if (item.has("accepted_answer_id")) {
+                val id: Int = item.getInt("accepted_answer_id");
+                //TODO: don't really like that - is there any way to simply convert form Int to String?
+                items = fetch("answers/$id?filter=withbody").getJSONArray("items");
 
-            println(extractSnippet(items.getJSONObject(0).getString("body")));
+                answer = extractSnippet(items.getJSONObject(0).getString("body"));
 
-            //TODO: first make sure there was a snippet extracted
-            break;
+                if (answer != null) {
+                    break;
+                }
+            }
+
+            ++i;
         }
 
-        ++i;
+        //TODO: process more pages maybe?
+
+        if (answer != null) {
+            println(answer);
+        } else {
+            println("Your only help is http://google.com/ man!");
+        }
+    } catch (error: Exception) {
+        println(error);
     }
-    //TODO: process more pages maybe?
 }
