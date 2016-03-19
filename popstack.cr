@@ -15,7 +15,6 @@ require "uri"
 # static code analysis
 # unit tests
 # auto documentation
-# exception handling
 # use more language features
 # logs
 # optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -36,21 +35,32 @@ def extractSnippet(content)
         #TODO: unescape
     end
 
-    return ""
+    return nil
 end
 
 query = URI.escape(ARGV.join(" "))
 
-fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
-    id = item["accepted_answer_id"]?
-    if id
-        puts extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"].to_s)
+begin
+    answer = nil
+    fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
+        id = item["accepted_answer_id"]?
+        if id
+            answer = extractSnippet(fetch("answers/" + id.to_s + "?filter=withbody")["items"][0]["body"].to_s)
+            if answer
+                break
+            end
+        end
+    }
 
-        #TODO: first make sure there was a snippet extracted
-        break
+    #TODO: process more pages maybe?
+
+    if answer
+        puts answer
+    else
+        puts "Your only help is http://google.com/ man!"
     end
-}
-
-#TODO: process more pages maybe?
+rescue exception
+    puts exception.message
+end
 
 $client.close()
