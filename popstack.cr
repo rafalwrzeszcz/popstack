@@ -32,7 +32,11 @@ def extractSnippet(content)
     match = $snippet.match(content)
     if match
         return match[1].strip
-        #TODO: unescape
+            .gsub("&lt;", "<")
+            .gsub("&gt;", ">")
+            .gsub("&quot;", "\"")
+            # this one has to be the last one!
+            .gsub("&amp;", "&")
     end
 
     return nil

@@ -21,5 +21,5 @@ For example:
 
 ```
 $ ./popstack grep history
-git grep &lt;regexp&gt; $(git rev-list --all)
+git grep <regexp> $(git rev-list --all)
 ```
