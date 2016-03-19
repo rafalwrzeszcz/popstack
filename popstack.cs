@@ -36,7 +36,6 @@ using JToken = Newtonsoft.Json.Linq.JToken;
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
  * use more language features (like overloaded operators, property accessors)
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -74,30 +73,44 @@ namespace PopStack
                 return HttpUtility.HtmlDecode(snippet);
             }
 
-            return "";
+            return null;
         }
 
         public static void Main(string[] args)
         {
             string query = String.Join(" ", args);
 
-            JArray items = PopStack.ParseResponse(
-                PopStack.MakeRequest("similar?order=desc&sort=relevance&title=" + HttpUtility.UrlEncode(query))
-            ).Value<JArray>("items");
-            JToken buffer;
-            foreach (JToken token in items) {
-                JObject item = token as JObject;
-                if (item.TryGetValue("accepted_answer_id", out buffer)) {
-                    String answer = PopStack.ParseResponse(
-                        PopStack.MakeRequest("answers/" + buffer.ToString() + "?filter=withbody")
-                    ).Value<JArray>("items").Value<JObject>(0).GetValue("body").ToString();
+            try {
+                string answer = null;
 
-                    Console.WriteLine(PopStack.ExtractSnippet(answer));
+                JArray items = PopStack.ParseResponse(
+                    PopStack.MakeRequest("similar?order=desc&sort=relevance&title=" + HttpUtility.UrlEncode(query))
+                ).Value<JArray>("items");
+                JToken buffer;
+                foreach (JToken token in items) {
+                    JObject item = token as JObject;
+                    if (item.TryGetValue("accepted_answer_id", out buffer)) {
+                        answer = PopStack.ExtractSnippet(
+                            PopStack.ParseResponse(
+                                PopStack.MakeRequest("answers/" + buffer.ToString() + "?filter=withbody")
+                            ).Value<JArray>("items").Value<JObject>(0).GetValue("body").ToString()
+                        );
 
-                    //TODO: first make sure there was a snippet extracted
-                    break;
+                        if (answer != null) {
+                            break;
+                        }
+                    }
                 }
+
                 //TODO: process more pages maybe?
+
+                if (answer != null) {
+                    Console.WriteLine(answer);
+                } else {
+                    Console.WriteLine("Your only help is http://google.com/ man!");
+                }
+            } catch (Exception error) {
+                Console.WriteLine(error.Message);
             }
         }
     }
