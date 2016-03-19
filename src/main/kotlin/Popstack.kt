@@ -63,10 +63,8 @@ fun main(args: Array<String>): Unit {
             item = items.getJSONObject(i);
 
             if (item.has("accepted_answer_id")) {
-                val id = item.getInt("accepted_answer_id");
                 answer = extractSnippet(
-                    //TODO: don't really like that - is there any way to simply convert form Int to String?
-                    fetch("answers/$id?filter=withbody")
+                    fetch("answers/" + item.get("accepted_answer_id").toString() + "?filter=withbody")
                         .getJSONArray("items")
                         .getJSONObject(0)
                         .getString("body")
