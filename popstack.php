@@ -7,9 +7,12 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
+use GuzzleHttp\Client;
+
+require(__DIR__ . '/vendor/autoload.php');
+
 /* TODO
  * build tool (for .phar)
- * dependency management
  * code style
  * static code analysis
  * unit tests
@@ -18,13 +21,12 @@
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
- * "proper" HTTP client setup (headers, gzip as a middleware)
  */
 
 function fetch(string $call) {
-    return json_decode(
-        gzdecode(file_get_contents('http://api.stackexchange.com/2.2/' . $call . '&site=stackoverflow'))
-    );
+    $client = new Client();
+    $response = $client->get('http://api.stackexchange.com/2.2/' . $call . '&site=stackoverflow');
+    return json_decode($response->getBody());
 }
 
 function extractSnippet(string $content) {

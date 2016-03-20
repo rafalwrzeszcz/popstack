@@ -1,0 +1,19 @@
+{
+    "name": "rafalwrzeszcz/popstack",
+    "description": "Pop (the code you need) from Stack(Overflow).",
+    "type": "project",
+    "homepage": "https://github.com/rafalwrzeszcz/popstack",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rafał Wrzeszcz",
+            "email": "rafal.wrzeszcz@wrzasq.pl",
+            "homepage": "http://wrzasq.pl/",
+            "role": "creator,manager,architect,developer"
+        }
+    ],
+    "require": {
+        "hhvm": ">=3.12",
+        "guzzlehttp/guzzle": "6.1.1"
+    }
+}
