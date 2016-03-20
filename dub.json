@@ -1,0 +1,13 @@
+{
+    "name": "popstack",
+    "description": "Pop (the code you need) from Stack(Overflow).",
+    "copyright": "Copyright © 2016, Rafał Wrzeszcz",
+    "authors": ["Rafał Wrzeszcz <rafal.wrzeszcz@wrzasq.pl>"],
+    "license": "MIT",
+    "configurations": [
+        {
+            "name": "popstack",
+            "targetType": "executable"
+        }
+    ]
+}

@@ -18,7 +18,6 @@ import std.zlib: HeaderFormat, UnCompress;
 
 /* TODO
  * build tool
- * dependency management
  * code style
  * static code analysis
  * unit tests
@@ -51,23 +50,31 @@ string extractSnippet(string content) {
         return decode(strip(match[1]));
     }
 
-    return "";
+    return null;
 }
 
 void main(string[] args) {
-    string query = join(args, " ");
+    string query = join(args[1..$], " ");
     JSONValue data = fetch("similar?order=desc&sort=relevance&title=" ~ encode(query))["items"];
     JSONValue[string] properties;
+    string answer = null;
     foreach (JSONValue item; data.array()) {
         properties = item.object();
         if ("accepted_answer_id" in properties) {
             data = fetch("answers/" ~ to!string(properties["accepted_answer_id"].integer()) ~ "?filter=withbody");
-            writeln(extractSnippet(data["items"][0]["body"].str()));
+            answer = extractSnippet(data["items"][0]["body"].str());
 
-            //TODO: first make sure there was a snippet extracted
-            break;
+            if (answer) {
+                break;
+            }
         }
     }
 
     //TODO: process more pages maybe?
+
+    if (answer) {
+        writeln(answer);
+    } else {
+        writeln("Your only help is http://google.com/ man!");
+    }
 }
