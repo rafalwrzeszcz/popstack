@@ -41,7 +41,10 @@
 
 (defn extractSnippet
     [body]
-    (string/trim (html-utils/xml-decode (nth (re-find #"(?s)<pre><code>(.*?)</code></pre>" body) 1))))
+    (let [match (nth (re-find #"(?s)<pre><code>(.*?)</code></pre>" body) 1)]
+        (if (nil? match)
+            nil
+            (string/trim (html-utils/xml-decode match)))))
 
 (defn getAnswer
     [id]
@@ -55,4 +58,6 @@
     [& args]
     ; TODO: first make sure there was a snippet extracted
     ; TODO: process more pages maybe?
-    (println (extractSnippet (getAnswer (ask (buildQuery args))))))
+    (let [answerId (ask (buildQuery args))
+        answer (if (nil? answerId) "Your only help is http://google.com/ man!" (extractSnippet (getAnswer answerId)))]
+        (println answer)))
