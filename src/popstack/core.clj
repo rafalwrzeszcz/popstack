@@ -13,22 +13,20 @@
 ; use more language features
 ; logs
 ; optimize (try to keep some parts of repetitive executions as instanced objects)
-; "proper" HTTP client setup (headers, gzip with json coercion)
 
 (ns popstack.core
     (:gen-class)
     (:require [clj-http.client :as client])
-    (:require [clojure.data.json :as json])
     (:require [clojure.string :as string])
     (:require [clojure.tools.html-utils :as html-utils]))
 
 (defn fetch
     [call]
-    (json/read-str (:body (client/get (str "http://api.stackexchange.com/2.2/" call "&site=stackoverflow")))))
+    (:body (client/get (str "http://api.stackexchange.com/2.2/" call "&site=stackoverflow") {:as :json})))
 
 (defn getAnswerId
     [post]
-    (get post "accepted_answer_id"))
+    (:accepted_answer_id post))
 
 (defn selectAnswer
     [ids]
@@ -36,7 +34,7 @@
 
 (defn ask
     [query]
-    (selectAnswer (map getAnswerId (get (fetch (str "similar?order=desc&sort=relevance&title=" query)) "items"))))
+    (selectAnswer (map getAnswerId (:items (fetch (str "similar?order=desc&sort=relevance&title=" query))))))
 
 (defn extractSnippet
     [body]
@@ -47,7 +45,7 @@
 
 (defn getAnswer
     [id]
-    (get (nth (get (fetch (str "answers/" id "?filter=withbody")) "items") 0) "body"))
+    (:body (nth (:items (fetch (str "answers/" id "?filter=withbody"))) 0)))
 
 (defn buildQuery
     [args]
