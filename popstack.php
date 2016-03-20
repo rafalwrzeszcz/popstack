@@ -17,7 +17,6 @@ require(__DIR__ . '/vendor/autoload.php');
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -32,24 +31,36 @@ function fetch(string $call) {
 function extractSnippet(string $content) {
     $match = [];
     if (preg_match('#<pre><code>(.*?)</code></pre>#s', $content, $match) > 0) {
-        return htmlspecialchars_decode(trim($match[1])) . "\n";
+        return htmlspecialchars_decode(trim($match[1]));
     }
 
-    return '';
+    return null;
 }
 
 $query = urlencode(implode(array_slice($_SERVER['argv'], 1), ' '));
 
-$items = fetch('similar?order=desc&sort=relevance&title=' . $query)->items;
-foreach ($items as $item) {
-    if (isset($item->accepted_answer_id)) {
-        echo extractSnippet(
-            fetch('answers/' . $item->accepted_answer_id . '?filter=withbody')->items[0]->body
-        );
+try {
+    $items = fetch('similar?order=desc&sort=relevance&title=' . $query)->items;
+    $answer = null;
+    foreach ($items as $item) {
+        if (isset($item->accepted_answer_id)) {
+            $answer = extractSnippet(
+                fetch('answers/' . $item->accepted_answer_id . '?filter=withbody')->items[0]->body
+            );
 
-        //TODO: first make sure there was a snippet extracted
-        break;
+            if ($answer != null) {
+                break;
+            }
+        }
     }
-}
 
-//TODO: process more pages maybe?
+    //TODO: process more pages maybe?
+
+    if ($answer != null) {
+        echo $answer, "\n";
+    } else {
+        echo 'Your only help is http://google.com/ man!', "\n";
+    }
+} catch (Exception $error) {
+    echo $error->getMessage(), "\n";
+}
