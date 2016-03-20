@@ -28,7 +28,7 @@ function fetch(string $call) {
     return json_decode($response->getBody());
 }
 
-function extractSnippet(string $content) {
+function extractSnippet(string $content): string {
     if (preg_match('#<pre><code>(.*?)</code></pre>#s', $content, $match) > 0) {
         return htmlspecialchars_decode(trim($match[1]));
     }
