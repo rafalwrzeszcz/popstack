@@ -10,7 +10,6 @@
 ; static code analysis
 ; unit tests
 ; auto documentation
-; exception handling
 ; use more language features
 ; logs
 ; optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -58,6 +57,7 @@
     [& args]
     ; TODO: first make sure there was a snippet extracted
     ; TODO: process more pages maybe?
-    (let [answerId (ask (buildQuery args))
-        answer (if (nil? answerId) "Your only help is http://google.com/ man!" (extractSnippet (getAnswer answerId)))]
-        (println answer)))
+    (println (try
+        (let [answerId (ask (buildQuery args))]
+            (if (nil? answerId) "Your only help is http://google.com/ man!" (extractSnippet (getAnswer answerId))))
+        (catch Exception error (.getMessage error)))))
