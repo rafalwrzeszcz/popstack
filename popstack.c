@@ -27,7 +27,7 @@
  * unit tests
  * auto documentation
  * error handling
- * use more language features (like overloaded operators)
+ * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
  * "proper" HTTP client setup (headers)
@@ -84,7 +84,7 @@ static char* request(const char* call, ...) {
 
 char* extractSnippet(const char* content) {
     GMatchInfo *match_info;
-    char* result = "";
+    char* result = NULL;
 
     if (g_regex_match (snippet, content, 0, &match_info)) {
         result = g_strstrip(g_match_info_fetch(match_info, 1));
@@ -129,6 +129,7 @@ int main(int argc, const char* argv[]) {
     json_t* items = json_object_get(response, "items");
     int count = json_array_size(items);
     json_t* answer;
+    char* text = NULL;
     for (i = 0; i < count; ++i) {
         answer = json_object_get(json_array_get(items, i), "accepted_answer_id");
 
@@ -138,19 +139,26 @@ int main(int argc, const char* argv[]) {
             answer = json_loads(content, 0, &error);
             free(content);
 
-            printf(
-                "%s\n",
-                extractSnippet(
-                    json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
-                )
+            text = extractSnippet(
+                json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
             );
 
-            //TODO: first make sure there was a snippet extracted
-            break;
+            if (text) {
+                break;
+            }
         }
     }
 
     //TODO; process more pages maybe?
+
+    printf(
+        "%s\n",
+        text
+            ? extractSnippet(
+                json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
+            )
+            : "Your only help is http://google.com/ man!"
+    );
 
     curl_easy_cleanup(curl);
     curl_global_cleanup();
