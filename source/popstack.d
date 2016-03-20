@@ -17,23 +17,20 @@ import std.xml: decode;
 import std.zlib: HeaderFormat, UnCompress;
 
 /* TODO
- * build tool
  * code style
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects, investigate memory allocation)
- * "proper" HTTP client setup (headers, gzip as a middleware)
  */
 
 auto snippet = regex(`<pre><code>(.*?)</code></pre>`, "s");
 
 JSONValue fetch(string call) {
-    ubyte[] response = get!(AutoProtocol, ubyte)("http://api.stackexchange.com/2.2/" ~ call ~ "&site=stackoverflow");
-    UnCompress inflator = new UnCompress(HeaderFormat.gzip);
+    auto response = get!(AutoProtocol, ubyte)("http://api.stackexchange.com/2.2/" ~ call ~ "&site=stackoverflow");
+    auto inflator = new UnCompress(HeaderFormat.gzip);
     const(void)[] buffer;
     char[] content = [];
 
@@ -54,27 +51,32 @@ string extractSnippet(string content) {
 }
 
 void main(string[] args) {
-    string query = join(args[1..$], " ");
-    JSONValue data = fetch("similar?order=desc&sort=relevance&title=" ~ encode(query))["items"];
-    JSONValue[string] properties;
-    string answer = null;
-    foreach (JSONValue item; data.array()) {
-        properties = item.object();
-        if ("accepted_answer_id" in properties) {
-            data = fetch("answers/" ~ to!string(properties["accepted_answer_id"].integer()) ~ "?filter=withbody");
-            answer = extractSnippet(data["items"][0]["body"].str());
+    auto query = join(args[1..$], " ");
 
-            if (answer) {
-                break;
+    try {
+        auto data = fetch("similar?order=desc&sort=relevance&title=" ~ encode(query))["items"];
+        JSONValue[string] properties;
+        string answer;
+        foreach (JSONValue item; data.array()) {
+            properties = item.object();
+            if ("accepted_answer_id" in properties) {
+                data = fetch("answers/" ~ to!string(properties["accepted_answer_id"].integer()) ~ "?filter=withbody");
+                answer = extractSnippet(data["items"][0]["body"].str());
+
+                if (answer) {
+                    break;
+                }
             }
         }
-    }
 
-    //TODO: process more pages maybe?
+        //TODO: process more pages maybe?
 
-    if (answer) {
-        writeln(answer);
-    } else {
-        writeln("Your only help is http://google.com/ man!");
+        if (answer) {
+            writeln(answer);
+        } else {
+            writeln("Your only help is http://google.com/ man!");
+        }
+    } catch (Exception error) {
+        writeln(error.msg);
     }
 }
