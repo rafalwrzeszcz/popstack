@@ -20,8 +20,6 @@
 
 /*TODO:
  * proper handling of memory allocation/freeing
- * build tool
- * dependency management
  * code style
  * static code analysis
  * unit tests
@@ -30,7 +28,6 @@
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
- * "proper" HTTP client setup (headers)
  */
 
 typedef struct {
