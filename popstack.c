@@ -24,7 +24,6 @@
  * static code analysis
  * unit tests
  * auto documentation
- * error handling
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -46,6 +45,11 @@ static size_t write_response(void* ptr, size_t size, size_t nmemb, void* stream)
 
     return size * nmemb;
 }
+
+/*TODO:
+ * it's super fast right now at failing with all the NULL-checks
+ * but connection/data errors should produce different printout
+ */
 
 static char* request(const char* call, ...) {
     char* data = NULL;
@@ -74,7 +78,7 @@ static char* request(const char* call, ...) {
     g_free(url);
 
     /* zero-terminate the result */
-    data[write_result.pos] = '\0';
+    data[write_result.pos] = 0;
 
     return data;
 }
@@ -83,22 +87,17 @@ char* extractSnippet(const char* content) {
     GMatchInfo *match_info;
     char* result = NULL;
 
-    if (g_regex_match (snippet, content, 0, &match_info)) {
-        result = g_strstrip(g_match_info_fetch(match_info, 1));
+    if (g_regex_match(snippet, content, 0, &match_info)) {
+        result = g_match_info_fetch(match_info, 1);
         //TODO: unescape
+        result = g_strstrip(result);
     }
 
     g_match_info_free(match_info);
     return result;
 }
 
-int main(int argc, const char* argv[]) {
-    // no need for freeing - will just be user through the lifetime of an app
-    snippet = g_regex_new("<pre><code>(.*?)</code></pre>", G_REGEX_DOTALL, 0, NULL);
-
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl = curl_easy_init();
-
+char* buildQuery(int argc, const char* argv[]) {
     char* parts[argc];
     int i;
 
@@ -115,52 +114,70 @@ int main(int argc, const char* argv[]) {
 
     char* escaped = curl_easy_escape(curl, query, 0);
     g_free(query);
+    return escaped;
+}
 
-    char* content = request("similar?order=desc&sort=relevance&title=%s", escaped);
+int main(int argc, const char* argv[]) {
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+
+    char* query = buildQuery(argc, argv);
+    char* content = request("similar?order=desc&sort=relevance&title=%s", query);
+    curl_free(query);
 
     json_error_t error;
     json_t* response = json_loads(content, 0, &error);
     free(content);
-    curl_free(escaped);
+
+    if (!response) {
+        printf("%s\n", error.text);
+        return 1;
+    }
+
+    snippet = g_regex_new("<pre><code>(.*?)</code></pre>", G_REGEX_DOTALL, 0, NULL);
 
     json_t* items = json_object_get(response, "items");
     int count = json_array_size(items);
     json_t* answer;
     char* text = NULL;
-    for (i = 0; i < count; ++i) {
+    for (int i = 0; i < count; ++i) {
         answer = json_object_get(json_array_get(items, i), "accepted_answer_id");
 
         if (answer != NULL) {
             content = request("answers/%d?filter=withbody", (int) json_integer_value(answer));
-
             answer = json_loads(content, 0, &error);
             free(content);
+
+            if (!response) {
+                printf("%s\n", error.text);
+                return 1;
+            }
 
             text = extractSnippet(
                 json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
             );
+            json_decref(answer);
 
             if (text) {
                 break;
             }
         }
     }
+    json_decref(response);
 
     //TODO; process more pages maybe?
-
-    printf(
-        "%s\n",
-        text
-            ? extractSnippet(
-                json_string_value(json_object_get(json_array_get(json_object_get(answer, "items"), 0), "body"))
-            )
-            : "Your only help is http://google.com/ man!"
-    );
 
     curl_easy_cleanup(curl);
     curl_global_cleanup();
 
     g_regex_unref(snippet);
+
+    if (text) {
+        printf("%s\n", text);
+        g_free(text);
+    } else {
+        printf("Your only help is http://google.com/ man!\n");
+    }
 
     return 0;
 }
