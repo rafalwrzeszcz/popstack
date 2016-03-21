@@ -24,9 +24,5 @@ didn't want to spend time creating manifest file for `.jar`. But still, it's pos
 
 ```
 $ mvn -q exec:java -Dexec.mainClass=popstack.PopstackKt -Dexec.arguments="grep history"
-git grep &lt;regexp&gt; $(git rev-list --all)
+git grep <regexp> $(git rev-list --all)
 ```
-
-# Known issues
-
-- response is presented in it's plain HTML form, which means HTML entities may bloat the snippet.
