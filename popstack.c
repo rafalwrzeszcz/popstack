@@ -83,13 +83,71 @@ static char* request(const char* call, ...) {
     return data;
 }
 
+#define FIND_ENTITY(string) strchr(string, '&')
+
+static const char* ENT_GT = "&gt;";
+static const char* ENT_LT = "&lt;";
+static const char* ENT_QUOT = "&quot;";
+static const char* ENT_AMP = "&amp;";
+
+static const int ENT_GT_LENGTH = 4;
+static const int ENT_LT_LENGTH = 4;
+static const int ENT_QUOT_LENGTH = 6;
+static const int ENT_AMP_LENGTH = 5;
+
+void unescapeHtml(char* content) {
+    // no need for any allocation, as we will in worst case result in same string, but most likely reduce it
+    // so it's fine to just do it in-place
+
+    // fast return if we don't need to modify anything
+    char* position = FIND_ENTITY(content);
+    if (!position) {
+        return;
+    }
+
+    char* buffer = content;
+    int length;
+    do {
+        // copy chunk form before entity
+        length = position - buffer;
+        memmove(content, buffer, length);
+
+        // move pointers for new positions
+        buffer += length;
+        content += length;
+
+        // replace entity
+        if (!memcmp(position, ENT_GT, ENT_GT_LENGTH)) {
+            *content = '>';
+        } else if (!memcmp(position, ENT_LT, ENT_LT_LENGTH)) {
+            *content = '<';
+        } else if (!memcmp(position, ENT_QUOT, ENT_QUOT_LENGTH)) {
+            *content = '"';
+        } else if (!memcmp(position, ENT_AMP, ENT_AMP_LENGTH)) {
+            *content = '&';
+        }
+
+        // entity representation is a single sign
+        ++content;
+        buffer = strchr(buffer, ';') + 1;
+
+        // look for next entity
+        position = FIND_ENTITY(buffer);
+    } while (position);
+
+    // copy left-over (including 0-char)
+    position = content;
+    while (*position++);
+    memmove(content, buffer, position - buffer);
+}
+
 char* extractSnippet(const char* content) {
     GMatchInfo *match_info;
     char* result = NULL;
 
     if (g_regex_match(snippet, content, 0, &match_info)) {
         result = g_match_info_fetch(match_info, 1);
-        //TODO: unescape
+        unescapeHtml(result);
         result = g_strstrip(result);
     }
 
