@@ -27,8 +27,3 @@ For example:
 $ lein run grep history
 git grep <regexp> $(git rev-list --all)
 ```
-
-# Known issues
-
-- response is presented in it's plain HTML form, which means HTML entities may bloat the snippet;
-- application doesn't exist after printing the response - probably Vert.x thread is still running.
