@@ -15,7 +15,6 @@ require "net/http"
 # static code analysis
 # unit tests
 # auto documentation
-# exception handling
 # use more language features
 # logs
 # optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -34,18 +33,32 @@ def extractSnippet(content)
         return CGI.unescapeHTML(match[1].strip)
     end
 
-    return ""
+    return nil
 end
 
 query = URI.escape(ARGV.join(" "))
 
-fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
-    if item.key?("accepted_answer_id")
-        puts extractSnippet(fetch("answers/" + item["accepted_answer_id"].to_s + "?filter=withbody")["items"][0]["body"])
+begin
+    answer = nil
+    fetch("similar?order=desc&sort=relevance&title=" + query)["items"].each { |item|
+        if item.key?("accepted_answer_id")
+            answer = extractSnippet(
+                fetch("answers/" + item["accepted_answer_id"].to_s + "?filter=withbody")["items"][0]["body"]
+            )
 
-        #TODO: first make sure there was a snippet extracted
-        break
+            unless answer.nil?
+                break
+            end
+        end
+    }
+
+    #TODO: process more pages maybe?
+
+    unless answer.nil?
+        puts answer
+    else
+        puts "Your only help is http://google.com/ man!"
     end
-}
-
-#TODO: process more pages maybe?
+rescue Exception => error
+    puts error.message
+end
