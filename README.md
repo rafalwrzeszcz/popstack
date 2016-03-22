@@ -25,5 +25,6 @@ For example:
 $ python popstack.py grep history
 git grep <regexp> $(git rev-list --all)
 ```
+
 **Note:** Make sure `python` resolves to version 3 - if your default **Python** version is 2, then use `python3` to
 explicitly run version 3.

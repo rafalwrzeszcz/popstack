@@ -12,13 +12,11 @@ import sys
 import urllib.parse
 
 # TODO:
-# build tool
 # dependency management
 # code style
 # static code analysis
 # unit tests
 # auto documentation
-# exception handling
 # logs
 # optimize (try to keep some parts of repetitive executions as instanced objects)
 
@@ -34,14 +32,27 @@ def extractSnippet(content):
     if match is not None:
         return html.unescape(match.group(1).strip())
 
-    return ""
+    return None
 
 query = " ".join(sys.argv[1:])
 
-for post in fetch("similar?order=desc&sort=relevance&title=" + urllib.parse.quote(query, ""))["items"]:
-    if "accepted_answer_id" in post:
-        answer = fetch("answers/" + str(post["accepted_answer_id"]) + "?filter=withbody")["items"][0]
-        print(extractSnippet(answer["body"]))
-        #TODO: first make sure there was a snippet extracted
-        break
+try:
+    answer = None
+    for post in fetch("similar?order=desc&sort=relevance&title=" + urllib.parse.quote(query, ""))["items"]:
+
+        if "accepted_answer_id" in post:
+            answer = extractSnippet(
+                fetch("answers/" + str(post["accepted_answer_id"]) + "?filter=withbody")["items"][0]["body"]
+            )
+
+            if answer is not None:
+                break
+
     #TODO: process more pages maybe?
+
+    if answer is not None:
+        print(answer)
+    else:
+        print("Your only help is http://google.com/ man!");
+except Exception as error:
+    print(type(error).__name__ + ": " + str(error))
