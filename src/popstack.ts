@@ -6,6 +6,7 @@
  */
 
 /// <reference path="typings/node/node.d.ts"/>
+/// <reference path="html-entities.d.ts"/>
 
 /* TODO:
  * static code analysis
@@ -18,6 +19,8 @@
 
 import { get, IncomingMessage } from "http";
 import { createGunzip, Gunzip } from "zlib";
+
+import { XmlEntities } from "html-entities";
 
 interface Consumer {
     (data: Object): void;
@@ -56,12 +59,12 @@ function fetch(call: String, consumer: Consumer): void {
 }
 
 let snippet: RegExp = /<pre><code>([\s\S]*?)<\/code><\/pre>/;
+let entities: XmlEntities = new XmlEntities();
 
 function extractSnippet(content: string): string {
     let match: string[] = content.match(snippet);
     if (match) {
-        return match[1].trim();
-        // todo: unescape
+        return entities.decode(match[1]).trim();
     }
 
     return "";

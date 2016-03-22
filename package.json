@@ -12,6 +12,9 @@
     },
     "license": "UNLICENSED",
     "private": true,
+    "dependencies": {
+        "html-entities": "1.2.0"
+    },
     "devDependencies": {
         "typescript": "1.8.7",
         "tslint": "3.6.0",
@@ -23,7 +26,7 @@
         "posttest": "echo 'TODO:CODE COVERAGE'",
         "prepublish": "npm test && npm run ts-deps && npm run ts-compile",
 
-        "ts-lint": "tslint src/**.ts src/**.tsx",
+        "ts-lint": "tslint src/**.ts src/**.tsx -e src/**.d.ts",
         "ts-deps": "tsd reinstall",
         "ts-compile": "tsc --removeComments --target es6 --module commonjs src/popstack.ts"
     }
