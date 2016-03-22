@@ -13,6 +13,7 @@
     "license": "UNLICENSED",
     "private": true,
     "dependencies": {
+        "bluebird": "3.3.4",
         "html-entities": "1.2.0"
     },
     "devDependencies": {

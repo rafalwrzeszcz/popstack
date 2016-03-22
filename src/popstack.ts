@@ -6,13 +6,13 @@
  */
 
 /// <reference path="typings/node/node.d.ts"/>
+/// <reference path="typings/bluebird/bluebird.d.ts"/>
 /// <reference path="html-entities.d.ts"/>
 
 /* TODO:
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
  * use more language features
  * logs
  */
@@ -20,10 +20,11 @@
 import { get, IncomingMessage } from "http";
 import { createGunzip, Gunzip } from "zlib";
 
+import * as Promise from "bluebird";
 import { XmlEntities } from "html-entities";
 
-interface Consumer {
-    (data: Object): void;
+interface Consumer<Type> {
+    (data: Type): void;
 }
 
 interface Question {
@@ -42,19 +43,34 @@ interface AnswersResponse {
     items: Answer[];
 }
 
-// todo: use promise
-function fetch(call: String, consumer: Consumer): void {
-    get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow", function(response: IncomingMessage): void {
-            let gunzip: Gunzip = createGunzip();
-            let buffer: string = "";
+interface ErrorResponse {
+    error_message: string;
+}
 
-            response.pipe(gunzip);
-            gunzip.on("data", function(chunk: string): void {
-                    buffer += chunk;
-            });
-            gunzip.on("end", function(): void {
-                    consumer(JSON.parse(buffer));
-            });
+function fetch<Result>(call: string): Promise<Result> {
+    return new Promise(function(resolve: Consumer<Result>, reject: Consumer<string>): void {
+            get(
+                "http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow",
+                function(response: IncomingMessage): void {
+                    let gunzip: Gunzip = createGunzip();
+                    let buffer: string = "";
+
+                    response.pipe(gunzip);
+                    gunzip.on("data", function(chunk: string): void {
+                            buffer += chunk;
+                    });
+                    gunzip.on("end", function(): void {
+                            let result: Object = JSON.parse(buffer);
+
+                            if ("error_message" in result) {
+                                reject((result as ErrorResponse).error_message);
+                            }
+
+                            resolve(result as Result);
+                    });
+                    gunzip.on("error", reject);
+                }
+            ).on("error", reject);
     });
 }
 
@@ -72,20 +88,25 @@ function extractSnippet(content: string): string {
 
 let query: string = process.argv.slice(2).join(" ");
 
-fetch("similar?order=desc&sort=relevance&title=" + encodeURIComponent(query), function(questions: Object): void {
-        let items: Question[] = (questions as QuestionsResponse).items;
-        for (let i: number = 0; i < items.length; ++i) {
-            if ("accepted_answer_id" in items[i]) {
-                fetch("answers/" + items[i].accepted_answer_id + "?filter=withbody", function(answers: Object): void {
-                        let answer: Answer = (answers as AnswersResponse).items[0];
+fetch("similar?order=desc&sort=relevance&title=" + encodeURIComponent(query))
+    .then(function(questions: QuestionsResponse): void {
+            let items: Question[] = questions.items;
+            for (let i: number = 0; i < items.length; ++i) {
+                if ("accepted_answer_id" in items[i]) {
+                    fetch("answers/" + items[i].accepted_answer_id + "?filter=withbody")
+                        .then(function(answers: AnswersResponse): void {
+                                let answer: Answer = answers.items[0];
 
-                        console.log(extractSnippet(answer.body));
-                });
+                                console.log(extractSnippet(answer.body));
+                        });
 
-                // todo: first make sure there was a snippet extracted
-                break;
+                    // todo: first make sure there was a snippet extracted
+                    break;
+                }
             }
-        }
 
-        // todo: process more pages maybe?
-});
+            // todo: process more pages maybe?
+    })
+    .catch(function(error: string): void {
+            console.log(error);
+    });
