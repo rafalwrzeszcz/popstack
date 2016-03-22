@@ -19,7 +19,6 @@ import "strconv"
 import "strings"
 
 /* TODO
- * build tool
  * dependency management
  * code style
  * static code analysis
@@ -29,55 +28,91 @@ import "strings"
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
- * "proper" HTTP client setup (headers)
  */
 
-func parse(content []byte) map[string]interface{} {
+func parse(content []byte) (map[string]interface{}, error) {
     var data map[string]interface{}
-    _ = json.Unmarshal(content, &data)
-    return data
+    var error = json.Unmarshal(content, &data)
+    return data, error
 }
 
-func fetch(call string) map[string]interface{} {
+func fetch(call string) (map[string]interface{}, error) {
     var response *http.Response
     var buffer []byte
+    var cause error
 
-    response, _ = http.Get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
-    buffer, _ = ioutil.ReadAll(response.Body)
-    response.Body.Close()
+    response, cause = http.Get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
+    if cause != nil {
+        return nil, cause
+    }
+
+    buffer, cause = ioutil.ReadAll(response.Body)
+    if cause != nil {
+        return nil, cause
+    }
+
+    cause = response.Body.Close()
+    if cause != nil {
+        return nil, cause
+    }
+
     return parse(buffer)
 }
 
-func extractSnippet(body string) string {
+func extractSnippet(body string) (string, bool) {
     snippet := regexp.MustCompile("(?s)<pre><code>(.*?)</code></pre>")
     if snippet.MatchString(body) {
-        return html.UnescapeString(strings.TrimSpace(snippet.FindStringSubmatch(body)[1]))
+        return html.UnescapeString(strings.TrimSpace(snippet.FindStringSubmatch(body)[1])), true
     }
 
-    return ""
+    return "", false
 }
 
-func main() {
-    var query string = url.QueryEscape(strings.Join(os.Args[1:], " "))
+func ask(query string) (string, error) {
+    var response, cause = fetch("similar?order=desc&sort=relevance&title=" + query)
+    if cause != nil {
+        return "", cause
+    }
 
-    var response map[string]interface{} = fetch("similar?order=desc&sort=relevance&title=" + query)
-    var items []interface{} = response["items"].([]interface{})
-    var item interface{}
+    var item, exists = response["error_message"]
+    if exists {
+        return "", fmt.Errorf("Error response from server: %s", item.(string))
+    }
+
+    var items = response["items"].([]interface{})
     var data map[string]interface{}
     var answer interface{}
-    var exists bool
+    var message string
     for _, item = range items {
         data = item.(map[string]interface{})
         answer, exists = data["accepted_answer_id"]
         if exists {
-            response = fetch("answers/" + strconv.FormatFloat(answer.(float64), 'f', -1, 64) + "?filter=withbody")
-            item = response["items"].([]interface{})[0]
-            fmt.Println(extractSnippet(item.(map[string]interface{})["body"].(string)))
+            response, cause = fetch(
+                "answers/" + strconv.FormatFloat(answer.(float64), 'f', -1, 64) + "?filter=withbody")
+            if cause != nil {
+                return "", cause
+            }
 
-            //TODO: first make sure there was a snippet extracted
-            break
+            item = response["items"].([]interface{})[0]
+            message, exists = extractSnippet(item.(map[string]interface{})["body"].(string))
+            if exists {
+                return message, nil
+            }
         }
     }
 
     //TODO: process more pages maybe?
+
+    return "Your only help is http://google.com/ man!", nil
+}
+
+func main() {
+    var query = url.QueryEscape(strings.Join(os.Args[1:], " "))
+
+    var answer, cause = ask(query)
+    if cause == nil {
+        fmt.Println(answer)
+    } else {
+        fmt.Println(cause)
+    }
 }
