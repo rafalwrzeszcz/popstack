@@ -83,30 +83,43 @@ function extractSnippet(content: string): string {
         return entities.decode(match[1]).trim();
     }
 
-    return "";
+    return null;
 }
 
 let query: string = process.argv.slice(2).join(" ");
 
+function errorHandler(error: string): void {
+    console.log(error);
+}
+
 fetch("similar?order=desc&sort=relevance&title=" + encodeURIComponent(query))
-    .then(function(questions: QuestionsResponse): void {
-            let items: Question[] = questions.items;
-            for (let i: number = 0; i < items.length; ++i) {
-                if ("accepted_answer_id" in items[i]) {
-                    fetch("answers/" + items[i].accepted_answer_id + "?filter=withbody")
-                        .then(function(answers: AnswersResponse): void {
-                                let answer: Answer = answers.items[0];
+    .then(function(questions: QuestionsResponse): Promise<string> {
+            let answer: string;
+            return Promise.coroutine(function*(items: Question[]): IterableIterator<Promise<void>> {
+                    for (let i: number = 0; i < items.length; ++i) {
+                        if ("accepted_answer_id" in items[i]) {
+                            yield fetch("answers/" + items[i].accepted_answer_id + "?filter=withbody")
+                                .then(function(answers: AnswersResponse): void {
+                                        answer = extractSnippet(answers.items[0].body);
+                                });
 
-                                console.log(extractSnippet(answer.body));
-                        });
+                            if (answer) {
+                                break;
+                            }
+                        }
+                    }
 
-                    // todo: first make sure there was a snippet extracted
-                    break;
-                }
-            }
-
-            // todo: process more pages maybe?
+                    // todo: process more pages maybe?
+            })(questions.items)
+                .then(function(): string {
+                        return answer;
+                });
     })
-    .catch(function(error: string): void {
-            console.log(error);
-    });
+    .then(function(answer: string): void {
+            if (answer) {
+                console.log(answer);
+            } else {
+                console.log("Your only help is http://google.com/ man!");
+            }
+    })
+    .catch(errorHandler);
