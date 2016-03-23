@@ -17,7 +17,7 @@ REST SDK**](http://microsoft.github.io/cpprestsdk) by [**Microsoft**](http://mic
 project as **Git** submodule, so you can simply do:
 
 ```
-git submodule update --init && build-casablanca.sh
+git submodule update --init
 ```
 
 Simple run `cmake . && make` and it will build both the **C++ REST SDK** and **Popstack**.
@@ -34,11 +34,6 @@ For example:
 
 ```
 $ ./popstack grep history
-git grep &lt;regexp&gt; $(git rev-list --all)
+git grep <regexp> $(git rev-list --all)
 
 ```
-
-# Known issues
-
-- snippet is not trimmed, so it may contain extra blank lines;
-- response is presented in it's plain HTML form, which means HTML entities may bloat the snippet.

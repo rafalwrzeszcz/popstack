@@ -11,6 +11,8 @@
 #include <vector>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -32,6 +34,8 @@ using std::stringstream;
 using std::vector;
 
 using boost::algorithm::join;
+using boost::algorithm::replace_all;
+using boost::algorithm::trim;
 using boost::iostreams::array_source;
 using boost::iostreams::copy;
 using boost::iostreams::filtering_istream;
@@ -55,7 +59,6 @@ using web::uri;
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
  * use more language features (like overloaded operators)
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
@@ -91,8 +94,14 @@ task< value > fetch(const string call) {
 optional< string > extractSnippet(string body) {
     smatch match;
     if (regex_search(body, match, snippet)) {
-        return match.str(1);
-        //TODO: trim, unescape
+        string content(match[1]);
+        replace_all(content, "&gt;", ">");
+        replace_all(content, "&lt;", "<");
+        replace_all(content, "&quot;", "\"");
+        // this has to be the last one!
+        replace_all(content, "&amp;", "&");
+        trim(content);
+        return content;
     }
 
     return optional< string >();
