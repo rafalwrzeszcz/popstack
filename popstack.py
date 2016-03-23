@@ -22,10 +22,17 @@ import urllib.parse
 
 snippet = re.compile("<pre><code>(.*?)</code></pre>", re.S)
 
+class StackOverflowApiException(Exception):
+    pass
+
 def fetch(call):
     response = requests.get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
+    data = response.json()
 
-    return response.json()
+    if "error_message" in data:
+        raise StackOverflowApiException(data["error_message"])
+
+    return data
 
 def extractSnippet(content):
     match = snippet.search(content)
