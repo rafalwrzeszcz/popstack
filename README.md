@@ -57,7 +57,6 @@ if val, ok := dict["foo"]; ok {
 titles. Hope to investigate API for a better call, or even use Google, but right now it may not always focus on best
 match; also sometimes adding more keywords may result on less-matching result. For example `./popstack grep history` is
 giving right now better match than `./popstach git grep hisotry`.
-- Total lack of exceptions handling - I just copy-pasted some code snippets form **StackOverflow** ;).
 
 ## What is it for me?
 
