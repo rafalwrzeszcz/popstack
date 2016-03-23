@@ -5,6 +5,7 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
+#include <exception>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/regex.hpp>
 
 #include "cpprest/base_uri.h"
@@ -24,6 +26,7 @@
 
 using std::cout;
 using std::endl;
+using std::exception;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -34,6 +37,7 @@ using boost::iostreams::copy;
 using boost::iostreams::filtering_istream;
 using boost::iostreams::gzip_decompressor;
 using boost::match_results;
+using boost::optional;
 using boost::regex;
 using boost::regex_search;
 using boost::smatch;
@@ -55,7 +59,6 @@ using web::uri;
  * use more language features (like overloaded operators)
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
- * "proper" HTTP client setup (headers, gzip as a middleware)
  */
 
 const regex snippet("<pre><code>(.*?)</code></pre>");
@@ -85,42 +88,58 @@ task< value > fetch(const string call) {
         });
 }
 
-string extractSnippet(string body) {
+optional< string > extractSnippet(string body) {
     smatch match;
     if (regex_search(body, match, snippet)) {
-        return match[1];
+        return match.str(1);
         //TODO: trim, unescape
     }
 
-    return "";
+    return optional< string >();
 }
 
 int main(int argc, const char* argv[]) {
     vector< string > arguments(argv + 1, argv + argc);
 
-    string body = fetch("similar?order=desc&sort=relevance&title=" + uri::encode_uri(join(arguments, " ")))
-        .then([](value data) -> string {
-                array items = data.at("items").as_array();
+    try {
+        fetch("similar?order=desc&sort=relevance&title=" + uri::encode_uri(join(arguments, " ")))
+            .then([](value data) -> optional< string > {
+                    array items = data.at("items").as_array();
 
-                array::iterator iterator;
-                for (iterator = items.begin(); iterator != items.end(); ++iterator) {
-                    if (iterator->has_field("accepted_answer_id")) {
-                        return fetch("answers/" + iterator->at("accepted_answer_id").serialize() + "?filter=withbody")
-                            .then([](value answer) -> string {
-                                    return answer.at("items").at(0).at("body").as_string();
-                            })
-                            .then(&extractSnippet)
-                            .get();
-                        //TODO: first make sure there was a snippet extracted
+                    array::iterator iterator;
+                    for (iterator = items.begin(); iterator != items.end(); ++iterator) {
+                        if (iterator->has_field("accepted_answer_id")) {
+                            optional< string > answer = fetch(
+                                "answers/" + iterator->at("accepted_answer_id").serialize() + "?filter=withbody"
+                            )
+                                .then([](value answer) -> string {
+                                        return answer.at("items").at(0).at("body").as_string();
+                                })
+                                .then(&extractSnippet)
+                                //TODO: get rid of this synchronization point
+                                .get();
+
+                            if (answer) {
+                                return answer;
+                            }
+                        }
                     }
-                }
 
-                //TODO: process more pages maybe?
-                return "";
-        })
-        .get();
+                    //TODO: process more pages maybe?
 
-    cout << body << endl;
+                    return optional< string >();
+            })
+            .then([](optional< string > answer) -> void {
+                    if (answer) {
+                        cout << answer.get() << endl;
+                    } else {
+                        cout << "Your only help is http://google.com/ man!" << endl;
+                    }
+            })
+            .wait();
+    } catch (exception& error) {
+        cout << error.what() << endl;
+    }
 
     return 0;
 }

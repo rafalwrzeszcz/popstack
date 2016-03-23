@@ -38,12 +38,6 @@ git grep &lt;regexp&gt; $(git rev-list --all)
 
 ```
 
-You might need to point additional path for vendor library:
-
-```
-LD_LIBRARY_PATH=`pwd`/vendor/casablanca/Release/build/Binaries/ ./popstack grep history
-```
-
 # Known issues
 
 - snippet is not trimmed, so it may contain extra blank lines;
