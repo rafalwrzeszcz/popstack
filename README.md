@@ -13,7 +13,7 @@ with headers):
 Names listed here are based on **Debian** packages, but I'm pretty sure that packages in other distribution will be
 named similarily.
 
-Once you have all of the libs installed, just run `./build.sh` script and it should produce `popstack` executable.
+Once you have all of the libs installed, just run `cmake . && make` and it should produce `popstack` executable.
 
 # Usage
 
