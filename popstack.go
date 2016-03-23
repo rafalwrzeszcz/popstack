@@ -24,7 +24,7 @@ import "strings"
  * static code analysis
  * unit tests
  * auto documentation
- * exception handling
+ * Rust-like result type would save a lot of boilerplate code
  * use more language features
  * logs
  * optimize (try to keep some parts of repetitive executions as instanced objects)
