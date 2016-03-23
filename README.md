@@ -20,7 +20,9 @@ project as **Git** submodule, so you can simply do:
 git submodule update --init && build-casablanca.sh
 ```
 
-Once you have all of the libs installed, just run `./build.sh` script and it should produce `popstack` executable.
+Simple run `cmake . && make` and it will build both the **C++ REST SDK** and **Popstack**.
+
+**Note:** It takes some time to compile **C++ REST SDK** but it's done only for the first time.
 
 # Usage
 

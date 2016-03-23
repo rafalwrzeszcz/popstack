@@ -16,11 +16,11 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/regex.hpp>
 
-#include <cpprest/base_uri.h>
-#include <cpprest/http_client.h>
-#include <cpprest/http_msg.h>
-#include <cpprest/json.h>
-#include <pplx/pplxtasks.h>
+#include "cpprest/base_uri.h"
+#include "cpprest/http_client.h"
+#include "cpprest/http_msg.h"
+#include "cpprest/json.h"
+#include "pplx/pplxtasks.h"
 
 using std::cout;
 using std::endl;
@@ -47,8 +47,6 @@ using web::json::value;
 using web::uri;
 
 /* TODO
- * build tool
- * dependency management
  * code style
  * static code analysis
  * unit tests
