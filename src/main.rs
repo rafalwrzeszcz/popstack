@@ -46,7 +46,8 @@ use url::percent_encoding::{ DEFAULT_ENCODE_SET, utf8_percent_encode };
 enum AppError {
     Hyper(HyperError),
     Serde(SerdeError),
-    Io(IoError)
+    Io(IoError),
+    Http(String)
 }
 
 impl From<HyperError> for AppError {
@@ -84,14 +85,19 @@ fn fetch(call: &str) -> AppResult<Value> {
     let mut gzip = try!(GzDecoder::new(response));
     let mut body = String::new();
     try!(gzip.read_to_string(&mut body));
-    from_str(&body).map_err(AppError::from)
+    from_str(&body)
+        .map_err(AppError::from)
+        .and_then(|ref root: Value| match root.find("error_message") {
+                Some(&Value::String(ref message)) => Err(AppError::Http(message.to_owned())),
+                _ => Ok(root.to_owned()),
+        })
 }
 
 fn extract_snippet(content: &str) -> Option<String> {
     // this `.unwrap()` is safe as long as the regex is valid at compile time
     let snippet = Regex::new("(?s)<pre><code>(.*?)</code></pre>").unwrap();
-    // this `.unwrap()` is safe as the regex match guarantees that there will be group 1
     snippet.captures(content)
+        // this `.unwrap()` is safe as the regex match guarantees that there will be group 1
         .map(|group| group.at(1).unwrap().trim().to_owned())
         .and_then(|string| String::from_utf8(Unescape::new(string.bytes()).collect()).ok())
 }
@@ -101,33 +107,25 @@ fn find_answer(id: u64) -> AppResult<Option<String>> {
     call.push_str(&id.to_string());
     call.push_str("?filter=withbody");
 
-    //TODO: it's a little messy, find out how to borrow needed values for required lifetime
-    let root = try!(fetch(&call));
-    match root
-        .find("items")
-        .and_then(|node| node.as_array())
-    {
-        Some(items) => {
-            let ref answer = items[0].to_owned();
-
-            Ok(
-                answer
-                    .find("body")
-                    .and_then(|node| node.as_string())
-                    .and_then(extract_snippet)
+    Ok(
+        try!(fetch(&call))
+            .find("items")
+            .and_then(|node| node.as_array())
+            .map(|items| items[0].to_owned())
+            //TODO: it's a little messy, find out how to borrow needed values for required lifetime
+            .and_then(|item|
+                    item.find("body")
+                        .and_then(|node| node.as_string())
+                        .and_then(extract_snippet)
             )
-        },
-        None => Ok(None),
-    }
+    )
 }
 
-//TODO: consider if we need Result<Option<>>, or maybe it's fine to use Result<String> and signal no result as Error
 fn ask(query: &str) -> AppResult<Option<String>> {
     let mut url = "similar?order=desc&sort=relevance&title=".to_owned();
     url.push_str(query);
 
-    let root = try!(fetch(&url));
-    match root
+    match try!(fetch(&url))
         .find("items")
     {
         Some(&Value::Array(ref items)) => {
