@@ -19,9 +19,18 @@ require "net/http"
 # logs
 # optimize (try to keep some parts of repetitive executions as instanced objects)
 
+class StackOverflowApiException < Exception
+end
+
 def fetch(call)
     response = Net::HTTP.get("api.stackexchange.com", "/2.2/" + call + "&site=stackoverflow")
-    return JSON.parse(response)
+    data = JSON.parse(response)
+
+    if data.key?("error_message")
+        raise StackOverflowApiException, data["error_message"]
+    end
+
+    return data
 end
 
 #TODO: get rid of global variables
