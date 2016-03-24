@@ -7,5 +7,5 @@
 
 /node_modules/
 /src/typings/
-/src/popstack.js
+/src/**/*.js
 /npm-debug.log
