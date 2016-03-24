@@ -66,6 +66,17 @@ using web::uri;
 
 const regex snippet("<pre><code>(.*?)</code></pre>");
 
+class StackOverflowApiException: public exception {
+public:
+    StackOverflowApiException(const string& message) : message(message) {}
+
+    virtual const char* what() const noexcept {
+        return this->message.c_str();
+    }
+private:
+    string message;
+};
+
 task< value > fetch(const string call) {
     http_client client("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow");
     return client
@@ -87,7 +98,13 @@ task< value > fetch(const string call) {
                 return output.str();
         })
         .then([](string content) -> value {
-                return value::parse(content);
+                value data = value::parse(content);
+
+                if (data.has_field("error_message")) {
+                    throw StackOverflowApiException(data.at("error_message").as_string());
+                }
+
+                return data;
         });
 }
 
