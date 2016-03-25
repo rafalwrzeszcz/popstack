@@ -15,5 +15,10 @@
     "require": {
         "hhvm": ">=3.12",
         "guzzlehttp/guzzle": "6.1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "PopStack\\": ""
+        }
     }
 }
