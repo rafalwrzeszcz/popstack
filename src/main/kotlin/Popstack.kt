@@ -7,11 +7,7 @@
 
 package popstack;
 
-import java.net.URLEncoder;
-
-import com.github.kittinunf.fuel.Fuel;
-
-import org.json.JSONObject;
+import popstack.stackoverflow.StackOverflowProvider;
 
 /*TODO:
  * build consolidated jar (shade plugin)
@@ -20,65 +16,15 @@ import org.json.JSONObject;
  * static code analysis
  * unit tests
  * auto documentation
- * use more language features (like overloaded operators)
  * logs
- * optimize
  */
-
-val snippet = Regex("<pre><code>(.*?)</code></pre>", RegexOption.DOT_MATCHES_ALL);
-
-fun fetch(call: String): JSONObject {
-    val result = Fuel
-        .get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
-        .responseString()
-        .component3();
-    return JSONObject(result);
-}
-
-fun extractSnippet(content: String): String? {
-    val match = snippet.find(content);
-    if (match != null) {
-        return match.groups[1]?.value?.trim()
-            ?.replace("&lt;", "<")
-            ?.replace("&gt;", ">")
-            ?.replace("&quot;", "\"")
-            // this one has to be the last one!
-            ?.replace("&amp;", "&");
-    }
-
-    return null;
-}
 
 fun main(args: Array<String>): Unit {
     val query = args.joinToString(" ");
+    val provider = StackOverflowProvider();
 
     try {
-        var items = fetch("similar?order=desc&sort=relevance&title=" + URLEncoder.encode(query, "UTF-8"))
-            .getJSONArray("items");
-        var length = items.length();
-        var item: JSONObject;
-        var i = 0;
-        var answer: String? = null;
-        while (i < length) {
-            item = items.getJSONObject(i);
-
-            if (item.has("accepted_answer_id")) {
-                answer = extractSnippet(
-                    fetch("answers/" + item.get("accepted_answer_id").toString() + "?filter=withbody")
-                        .getJSONArray("items")
-                        .getJSONObject(0)
-                        .getString("body")
-                );
-
-                if (answer != null) {
-                    break;
-                }
-            }
-
-            ++i;
-        }
-
-        //TODO: process more pages maybe?
+        val answer = provider.search(query);
 
         if (answer != null) {
             println(answer);
