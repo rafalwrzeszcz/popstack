@@ -5,11 +5,9 @@
 # @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
 ##
 
-import html
-import re
-import requests
 import sys
-import urllib.parse
+
+from popstack.stackoverflow import StackOverflowProvider
 
 # TODO:
 # dependency management
@@ -18,44 +16,12 @@ import urllib.parse
 # unit tests
 # auto documentation
 # logs
-# optimize (try to keep some parts of repetitive executions as instanced objects)
-
-snippet = re.compile("<pre><code>(.*?)</code></pre>", re.S)
-
-class StackOverflowApiException(Exception):
-    pass
-
-def fetch(call):
-    response = requests.get("http://api.stackexchange.com/2.2/" + call + "&site=stackoverflow")
-    data = response.json()
-
-    if "error_message" in data:
-        raise StackOverflowApiException(data["error_message"])
-
-    return data
-
-def extractSnippet(content):
-    match = snippet.search(content)
-    if match is not None:
-        return html.unescape(match.group(1).strip())
-
-    return None
 
 query = " ".join(sys.argv[1:])
 
 try:
-    answer = None
-    for post in fetch("similar?order=desc&sort=relevance&title=" + urllib.parse.quote(query, ""))["items"]:
-
-        if "accepted_answer_id" in post:
-            answer = extractSnippet(
-                fetch("answers/" + str(post["accepted_answer_id"]) + "?filter=withbody")["items"][0]["body"]
-            )
-
-            if answer is not None:
-                break
-
-    #TODO: process more pages maybe?
+    provider = StackOverflowProvider()
+    answer = provider.search(query)
 
     if answer is not None:
         print(answer)
