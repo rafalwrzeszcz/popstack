@@ -1,6 +1,6 @@
 [root]
 name = "popstack"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "flate2 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
