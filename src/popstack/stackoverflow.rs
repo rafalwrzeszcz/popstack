@@ -10,6 +10,7 @@ extern crate hyper;
 extern crate marksman_escape;
 extern crate regex;
 extern crate serde_json;
+extern crate url;
 
 use super::error::{ AppError, AppResult };
 use super::provider::Provider;
@@ -25,6 +26,8 @@ use self::marksman_escape::Unescape;
 use self::regex::Regex;
 
 use self::serde_json::{ Value, from_str };
+
+use self::url::percent_encoding::{ DEFAULT_ENCODE_SET, utf8_percent_encode };
 
 pub struct StackOverflowProvider {
     client: Client
@@ -84,7 +87,7 @@ fn extract_snippet(content: &str) -> Option<String> {
 impl Provider for StackOverflowProvider {
     fn search(&self, query: &str) -> AppResult<Option<String>> {
         let mut url = "similar?order=desc&sort=relevance&title=".to_owned();
-        url.push_str(query);
+        url.push_str(&utf8_percent_encode(query, DEFAULT_ENCODE_SET));
 
         match try!(self.fetch(&url))
             .find("items")
