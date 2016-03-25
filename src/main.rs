@@ -15,9 +15,7 @@ mod popstack;
  * static code analysis
  * unit tests
  * auto documentation
- * use more language features (and investigate currently used ones)
  * logs
- * optimize (try to keep some parts of repetitive executions as instanced objects, especially HTTP client)
  */
 
 use std::env::args;
@@ -33,7 +31,6 @@ fn main() {
 
     match provider.search(&utf8_percent_encode(&args.join(" "), DEFAULT_ENCODE_SET)) {
         Ok(Some(snippet)) => println!("{}", snippet),
-        //TODO: process more pages maybe?
         Ok(None) => println!("Your only help is http://google.com/ man!"),
         Err(error) => println!("Error occured: {:?}", error),
     }

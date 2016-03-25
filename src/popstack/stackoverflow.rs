@@ -26,32 +26,50 @@ use self::regex::Regex;
 
 use self::serde_json::{ Value, from_str };
 
-pub struct StackOverflowProvider;
+pub struct StackOverflowProvider {
+    client: Client
+}
 
 impl StackOverflowProvider {
     pub fn new() -> StackOverflowProvider {
-        StackOverflowProvider
+        StackOverflowProvider { client: Client::new() }
     }
-}
 
-fn fetch(call: &str) -> AppResult<Value> {
-    //TODO: make it reusable - once provider abstraction is separated this can be done by struct property
-    let client = Client::new();
+    fn fetch(&self, call: &str) -> AppResult<Value> {
+        let mut url = "http://api.stackexchange.com/2.2/".to_owned();
+        url.push_str(call);
+        url.push_str("&site=stackoverflow");
 
-    let mut url = "http://api.stackexchange.com/2.2/".to_owned();
-    url.push_str(call);
-    url.push_str("&site=stackoverflow");
+        let response = try!(self.client.get(&url).send());
+        let mut gzip = try!(GzDecoder::new(response));
+        let mut body = String::new();
+        try!(gzip.read_to_string(&mut body));
+        from_str(&body)
+            .map_err(AppError::from)
+            .and_then(|ref root: Value| match root.find("error_message") {
+                    Some(&Value::String(ref message)) => Err(AppError::Http(message.to_owned())),
+                    _ => Ok(root.to_owned()),
+            })
+    }
 
-    let response = try!(client.get(&url).send());
-    let mut gzip = try!(GzDecoder::new(response));
-    let mut body = String::new();
-    try!(gzip.read_to_string(&mut body));
-    from_str(&body)
-        .map_err(AppError::from)
-        .and_then(|ref root: Value| match root.find("error_message") {
-                Some(&Value::String(ref message)) => Err(AppError::Http(message.to_owned())),
-                _ => Ok(root.to_owned()),
-        })
+    fn find_answer(&self, id: u64) -> AppResult<Option<String>> {
+        let mut call = "answers/".to_owned();
+        call.push_str(&id.to_string());
+        call.push_str("?filter=withbody");
+
+        Ok(
+            try!(self.fetch(&call))
+                .find("items")
+                .and_then(|node| node.as_array())
+                .map(|items| items[0].to_owned())
+                //TODO: it's a little messy, find out how to borrow needed values for required lifetime
+                .and_then(|item|
+                        item.find("body")
+                            .and_then(|node| node.as_string())
+                            .and_then(extract_snippet)
+                )
+        )
+    }
 }
 
 fn extract_snippet(content: &str) -> Option<String> {
@@ -63,31 +81,12 @@ fn extract_snippet(content: &str) -> Option<String> {
         .and_then(|string| String::from_utf8(Unescape::new(string.bytes()).collect()).ok())
 }
 
-fn find_answer(id: u64) -> AppResult<Option<String>> {
-    let mut call = "answers/".to_owned();
-    call.push_str(&id.to_string());
-    call.push_str("?filter=withbody");
-
-    Ok(
-        try!(fetch(&call))
-            .find("items")
-            .and_then(|node| node.as_array())
-            .map(|items| items[0].to_owned())
-            //TODO: it's a little messy, find out how to borrow needed values for required lifetime
-            .and_then(|item|
-                    item.find("body")
-                        .and_then(|node| node.as_string())
-                        .and_then(extract_snippet)
-            )
-    )
-}
-
 impl Provider for StackOverflowProvider {
     fn search(&self, query: &str) -> AppResult<Option<String>> {
         let mut url = "similar?order=desc&sort=relevance&title=".to_owned();
         url.push_str(query);
 
-        match try!(fetch(&url))
+        match try!(self.fetch(&url))
             .find("items")
         {
             Some(&Value::Array(ref items)) => {
@@ -95,7 +94,7 @@ impl Provider for StackOverflowProvider {
                 for item in items {
                     match item.find("accepted_answer_id") {
                         Some(&Value::U64(id)) => {
-                            match try!(find_answer(id)) {
+                            match try!(self.find_answer(id)) {
                                 Some(snippet) => return Ok(Some(snippet)),
                                 _ => (),
                             }
@@ -107,6 +106,7 @@ impl Provider for StackOverflowProvider {
             _ => (),
         }
 
+        //TODO: process more pages maybe?
         Ok(None)
     }
 }
