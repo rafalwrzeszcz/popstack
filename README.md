@@ -8,7 +8,7 @@ but `ldc` and `gdc` should work as well.
 Then just compile the source file:
 
 ```
-dmd popstack.d
+dub
 ```
 
 # Usage

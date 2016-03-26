@@ -5,28 +5,29 @@
  * @copyright 2016 © by Rafał Wrzeszcz - Wrzasq.pl.
  */
 
-import std.array: join;
+module popstack.stackoverflow;
+
 import std.conv: to;
 import std.json: parseJSON, JSONValue;
 import std.net.curl: AutoProtocol, get;
 import std.regex: matchFirst, regex;
-import std.stdio: writeln;
 import std.string: strip;
 import std.uri: encode;
 import std.xml: decode;
 import std.zlib: HeaderFormat, UnCompress;
 
-/* TODO
- * code style
- * static code analysis
- * unit tests
- * auto documentation
- * use more language features
- * logs
- * optimize (try to keep some parts of repetitive executions as instanced objects, investigate memory allocation)
- */
+import popstack.provider: ProviderInterface;
 
 auto snippet = regex(`<pre><code>(.*?)</code></pre>`, "s");
+
+string extractSnippet(string content) {
+    auto match = matchFirst(content, snippet);
+    if (!match.empty) {
+        return decode(strip(match[1]));
+    }
+
+    return null;
+}
 
 JSONValue fetch(string call) {
     auto response = get!(AutoProtocol, ubyte)("http://api.stackexchange.com/2.2/" ~ call ~ "&site=stackoverflow");
@@ -41,42 +42,27 @@ JSONValue fetch(string call) {
     return parseJSON(content);
 }
 
-string extractSnippet(string content) {
-    auto match = matchFirst(content, snippet);
-    if (!match.empty) {
-        return decode(strip(match[1]));
-    }
-
-    return null;
-}
-
-void main(string[] args) {
-    auto query = join(args[1..$], " ");
-
-    try {
+class StackOverflowProvider : ProviderInterface {
+    string search(string query) {
         auto data = fetch("similar?order=desc&sort=relevance&title=" ~ encode(query))["items"];
         JSONValue[string] properties;
         string answer;
         foreach (JSONValue item; data.array()) {
             properties = item.object();
             if ("accepted_answer_id" in properties) {
-                data = fetch("answers/" ~ to!string(properties["accepted_answer_id"].integer()) ~ "?filter=withbody");
+                data = fetch(
+                    "answers/" ~ to!string(properties["accepted_answer_id"].integer()) ~ "?filter=withbody"
+                );
                 answer = extractSnippet(data["items"][0]["body"].str());
 
                 if (answer) {
-                    break;
+                    return answer;
                 }
             }
         }
 
         //TODO: process more pages maybe?
 
-        if (answer) {
-            writeln(answer);
-        } else {
-            writeln("Your only help is http://google.com/ man!");
-        }
-    } catch (Exception error) {
-        writeln(error.msg);
+        return null;
     }
 }
