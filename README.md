@@ -69,24 +69,17 @@ excuse to work with some new stuff and gain some new skills.
 Below is the list of the branches that are being currently active (you may check repository branches to see list of
 historical implementations, that are not being updated anymore), just pick the one which suites you the best:
 
-- [popstack-c](https://github.com/rafalwrzeszcz/popstack/tree/popstack-c) -  C source - requires compilation (uses
-GLib, Jasson and Curl);
-- [popstack-c++](https://github.com/rafalwrzeszcz/popstack/tree/popstack-c++)- C++ source - requires compilation on
+- [popstack-c++](https://github.com/rafalwrzeszcz/popstack/tree/popstack-c++) - C++ source - requires compilation on
 it's own as well as building dependencies (also uses some Boost libraries);
-- [popstack-clojure](https://github.com/rafalwrzeszcz/popstack/tree/popstack-clojure) - Clojure (JVM);
-- [popstack-crystal](https://github.com/rafalwrzeszcz/popstack/tree/popstack-crystal) - Crystal source - requires
-compilation;
 - [popstack-csharp](https://github.com/rafalwrzeszcz/popstack/tree/popstack-csharp) - C# source - can be compiled with
 Mono;
 - [popstack-d](https://github.com/rafalwrzeszcz/popstack/tree/popstack-d) - D source - requires compilation, uses only
 standard D library, no external dependencies;
-- [popstack-go](https://github.com/rafalwrzeszcz/popstack/tree/popstack-go) - Go source, only standard libraries used;
 - [popstack-hack](https://github.com/rafalwrzeszcz/popstack/tree/popstack-hack) - HHVM/Hack script - right now it's
 just PHP source ensured to work under HHVM, plan to investigate more Hack features later;
 - [popstack-java](https://github.com/rafalwrzeszcz/popstack/tree/popstack-java) - Java source code based on Unirest;
 - [popstack-kotlin](https://github.com/rafalwrzeszcz/popstack/tree/popstack-kotlin) - Kotlin (another JVM-targetted)
 implementation, using Fuel;
-- [popstack-php](https://github.com/rafalwrzeszcz/popstack/tree/popstack-php) - PHP source code, no dependencies;
 - [popstack-python](https://github.com/rafalwrzeszcz/popstack/tree/popstack-python) - Python script;
 - [popstack-ruby](https://github.com/rafalwrzeszcz/popstack/tree/popstack-ruby) - Ruby script - another dependency-free
 implementation based only on language's standard library;
