@@ -7,7 +7,7 @@
 
 cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 project(popstack CXX)
-add_executable(popstack popstack.cpp)
+add_executable(popstack popstack.cpp src/PopStack/StackOverflow/StackOverflowProvider.cpp)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
