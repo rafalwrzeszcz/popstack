@@ -1,6 +1,6 @@
 # PopStack
 
-![](https://fbcdn-sphotos-a-a.akamaihd.net/hphotos-ak-xpa1/t31.0-8/12819259_1250636521616390_5136056732845390843_o.jpg)
+![](http://i.imgur.com/SZPjHwz.jpg)
 
 ## What is it?
 
